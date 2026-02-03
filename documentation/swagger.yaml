@@ -1,0 +1,40 @@
+basePath: /
+definitions:
+  handlers.Station:
+    properties:
+      crs:
+        type: string
+      latitude:
+        type: number
+      longitude:
+        type: number
+      name:
+        type: string
+      nlc:
+        type: string
+      tiploc:
+        type: string
+    type: object
+host: api.train.vulpz.com
+info:
+  contact: {}
+  description: This is simple REST API for a UK train data.
+  title: Train API
+  version: "1.0"
+paths:
+  /stations:
+    get:
+      description: Responds with a list of all stations in the database
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handlers.Station'
+            type: array
+      summary: Get all stations
+      tags:
+      - stations
+swagger: "2.0"

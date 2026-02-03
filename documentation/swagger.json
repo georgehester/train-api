@@ -1,0 +1,61 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "This is simple REST API for a UK train data.",
+        "title": "Train API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "host": "api.train.vulpz.com",
+    "basePath": "/",
+    "paths": {
+        "/stations": {
+            "get": {
+                "description": "Responds with a list of all stations in the database",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "stations"
+                ],
+                "summary": "Get all stations",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/handlers.Station"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "handlers.Station": {
+            "type": "object",
+            "properties": {
+                "crs": {
+                    "type": "string"
+                },
+                "latitude": {
+                    "type": "number"
+                },
+                "longitude": {
+                    "type": "number"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "nlc": {
+                    "type": "string"
+                },
+                "tiploc": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}
