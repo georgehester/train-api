@@ -10,12 +10,19 @@ end_date = datetime.date(2026, 1, 31)
 
 Database.initialise("/Volumes/LaCie/train.db")
 
-Database.cursor().execute(
+cursor = Database.cursor()
+cursor.execute(
 """
 SELECT tiploc FROM stations;
 """
 )
-tiplocs = [row["tiploc"] for row in Database.cursor().fetchall()]
+tiplocs = [row["tiploc"] for row in cursor.fetchall()]
+
+Database.cursor().execute(
+"""
+DELETE FROM stops;
+""")
+Database.commit()
 
 def parse_file(path, date):
     file = open(path, "r")

@@ -36,3 +36,32 @@ CREATE TABLE IF NOT EXISTS stops (
     FOREIGN KEY(journey_id) REFERENCES journeys(id),
     FOREIGN KEY(station_tiploc) REFERENCES stations(tiploc)
 );
+
+CREATE TABLE IF NOT EXISTS administrators (
+    id TEXT PRIMARY KEY,
+    email TEXT NOT NULL,
+    forename TEXT NOT NULL,
+    surname TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS customers (
+    id TEXT PRIMARY KEY,
+    email TEXT NOT NULL,
+    forename TEXT NOT NULL,
+    surname TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS applications (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    key TEXT NOT NULL,
+    customer_id TEXT NOT NULL,
+    approved INTEGER DEFAULT 0,
+    FOREIGN KEY(customer_id) REFERENCES customers(id),
+);
+
+-- CREATE TABLE IF NOT EXISTS api_keys (
+--     id TEXT PRIMARY KEY,
+--     value TEXT NOT NULL,
+
+-- );
