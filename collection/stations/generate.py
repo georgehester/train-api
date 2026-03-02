@@ -1,10 +1,9 @@
-import psycopg
 import json
 from collection.database import Database
 
 station_location = "/Volumes/LaCie/train/station"
 
-Database.initialise("/Volumes/LaCie/train.db")
+Database.initialise("localhost", 5432, "train", "application", "password")
 
 with open(f"{station_location}/stations.json", "r") as file:
     stations_data = json.load(file)
@@ -25,12 +24,12 @@ for station in stations_data["stations"]:
     if corpus_match == None:
         raise RuntimeError(f"[ Error ][ Could not find TIPLOC for CRS {station["crsCode"]} ]")
 
-    Database.cursor().execute(
+    Database.execute(
         """
         INSERT INTO
             stations (name, crs, nlc, tiploc, latitude, longitude)
         VALUES
-            (?, ?, ?, ?, ?, ?);
+            (%s, %s, %s, %s, %s, %s);
         """,
         (
             station["name"],

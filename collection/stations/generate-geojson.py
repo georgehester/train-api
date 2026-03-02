@@ -1,29 +1,18 @@
-import datetime
-import xml.etree.ElementTree as ET
-import io
-from dataclasses import dataclass
-import psycopg
+from collection.database import Database
 import json
 
-database_connection = psycopg.connect(
-    host="localhost",
-    port=5432,
-    dbname="postgres",
-    user="application",
-    password="password",
-)
-database_cursor = database_connection.cursor()
+Database.initialise("localhost", 5432, "train", "application", "password")
 
-database_cursor.execute(
+cursor = Database.execute("SELECT * FROM stations;")
+stations = [row for row in cursor.fetchall()]
+
+cursor = Database.execute(
 """
-SELECT * FROM stations;
-"""
-)
-stations = [row for row in database_cursor.fetchall()]
-
-
-print(stations)
-
+SELECT stations.tiploc, COUNT(stops.id) as count FROM stations
+LEFT JOIN stops ON stops.station_tiploc = stations.tiploc
+GROUP BY stations.tiploc;
+""")
+service_count = {row["tiploc"]: row["count"] for row in cursor.fetchall()}
 
 output = {
     "type": "FeatureCollection",
@@ -35,17 +24,16 @@ for station in stations:
     "type": "Feature",
         "geometry": {
             "type": "Point",
-            "coordinates": [station[5], station[4]],
+            "coordinates": [station["longitude"], station["latitude"]],
         },
         "properties": {
-            "id": station[0],
-            "value": 0,
+            "id": station["tiploc"],
+            "value": service_count[station["tiploc"]],
         },
     })
-
 
 file = open("stations.geojson", "w+")
 json.dump(output, file)
 file.close()
 
-database_connection.close()
+Database.close()

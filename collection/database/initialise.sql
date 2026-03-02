@@ -1,10 +1,8 @@
-PRAGMA foreign_keys = ON;
-
 CREATE TABLE IF NOT EXISTS stations (
-    tiploc TEXT PRIMARY KEY,
+    tiploc VARCHAR(7) PRIMARY KEY,
     nlc TEXT UNIQUE NOT NULL,
     name TEXT NOT NULL,
-    crs TEXT UNIQUE NOT NULL,
+    crs VARCHAR(3) UNIQUE NOT NULL,
     latitude REAL NOT NULL,
     longitude REAL NOT NULL
 );
@@ -13,26 +11,26 @@ CREATE TABLE IF NOT EXISTS journeys (
     id TEXT PRIMARY KEY,
     train_operator_code TEXT NOT NULL,
     train_category TEXT DEFAULT 'OO',
-    passenger_service INTEGER DEFAULT 1,
-    deleted INTEGER DEFAULT 0
+    passenger_service BOOLEAN DEFAULT TRUE,
+    deleted BOOLEAN DEFAULT FALSE
 );
 
 CREATE TABLE IF NOT EXISTS stops (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     journey_id TEXT NOT NULL,
-    stop_type TEXT NOT NULL,
-    station_tiploc TEXT NOT NULL,
-    working_arrival TEXT,
-    working_departure TEXT,
-    working_passing TEXT,
-    public_arrival TEXT,
-    public_departure TEXT,
-    public_passing TEXT,
-    cancelled INTEGER DEFAULT 0,
-    platform TEXT,
-    actual_arrival TEXT,
-    actual_departure TEXT,
-    actual_passing TEXT,
+    stop_type VARCHAR(4) NOT NULL,
+    station_tiploc VARCHAR(7) NOT NULL,
+    working_arrival TIME,
+    working_departure TIME,
+    working_passing TIME,
+    public_arrival TIME,
+    public_departure TIME,
+    public_passing TIME,
+    cancelled BOOLEAN DEFAULT FALSE,
+    platform VARCHAR(3),
+    actual_arrival TIME,
+    actual_departure TIME,
+    actual_passing TIME,
     FOREIGN KEY(journey_id) REFERENCES journeys(id),
     FOREIGN KEY(station_tiploc) REFERENCES stations(tiploc)
 );
@@ -56,12 +54,6 @@ CREATE TABLE IF NOT EXISTS applications (
     name TEXT NOT NULL,
     key TEXT NOT NULL,
     customer_id TEXT NOT NULL,
-    approved INTEGER DEFAULT 0,
-    FOREIGN KEY(customer_id) REFERENCES customers(id),
+    approved BOOLEAN DEFAULT FALSE,
+    FOREIGN KEY(customer_id) REFERENCES customers(id)
 );
-
--- CREATE TABLE IF NOT EXISTS api_keys (
---     id TEXT PRIMARY KEY,
---     value TEXT NOT NULL,
-
--- );

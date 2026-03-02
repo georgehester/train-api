@@ -243,6 +243,8 @@ __marimo__/
 .streamlit/secrets.toml
 
 # Custom
-/working/
+**/working/
 train.db
 *.env
+/static/
+/data/

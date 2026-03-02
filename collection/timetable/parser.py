@@ -4,6 +4,7 @@ import collection.timetable.classes
 from collection.database import Database
 from typing import List
 from collection.parser import parse_date, parse_boolean
+import threading
 
 def parse_origin(record: ET.Element, tiplocs: List[str], journey: collection.timetable.classes.Journey):
     origin = collection.timetable.classes.Origin(
@@ -22,12 +23,12 @@ def parse_origin(record: ET.Element, tiplocs: List[str], journey: collection.tim
 
     if origin.locationTIPLOC not in tiplocs: return
 
-    Database.cursor().execute(
+    Database.execute(
         """
         INSERT INTO
             stops (journey_id, stop_type, station_tiploc, working_arrival, working_departure, cancelled, platform, public_arrival, public_departure)
         VALUES
-            (?, ?, ?, ?, ?, ?, ?, ?, ?);
+            (%s, %s, %s, %s, %s, %s, %s, %s, %s);
         """,
         (
             origin.journey.rid,
@@ -39,7 +40,7 @@ def parse_origin(record: ET.Element, tiplocs: List[str], journey: collection.tim
             origin.platform,
             origin.publicTimeArrival,
             origin.publicTimeDeparture
-        ),
+        )
     )
     Database.commit()
     print("OR")
@@ -58,12 +59,12 @@ def parse_operational_origin(record: ET.Element, tiplocs: List[str], journey: co
 
     if operational_origin.locationTIPLOC not in tiplocs: return
 
-    Database.cursor().execute(
+    Database.execute(
         """
         INSERT INTO
             stops (journey_id, stop_type, station_tiploc, working_arrival, working_departure, cancelled, platform)
         VALUES
-            (?, ?, ?, ?, ?, ?, ?);
+            (%s, %s, %s, %s, %s, %s, %s);
         """,
         (
             operational_origin.journey.rid,
@@ -96,12 +97,12 @@ def parse_intermediate(record: ET.Element, tiplocs: List[str], journey: collecti
 
     if intermediate.locationTIPLOC not in tiplocs: return
 
-    Database.cursor().execute(
+    Database.execute(
         """
         INSERT INTO
             stops (journey_id, stop_type, station_tiploc, working_arrival, working_departure, cancelled, platform, public_arrival, public_departure)
         VALUES
-            (?, ?, ?, ?, ?, ?, ?, ?, ?);
+            (%s, %s, %s, %s, %s, %s, %s, %s, %s);
         """,
         (
             intermediate.journey.rid,
@@ -113,7 +114,7 @@ def parse_intermediate(record: ET.Element, tiplocs: List[str], journey: collecti
             intermediate.platform,
             intermediate.publicTimeArrival,
             intermediate.publicTimeDeparture
-        ),
+        )
     )
     Database.commit()
     print("IP")
@@ -133,12 +134,12 @@ def parse_operational_intermediate(record: ET.Element, tiplocs: List[str], journ
 
     if operational_intermediate.locationTIPLOC not in tiplocs: return
 
-    Database.cursor().execute(
+    Database.execute(
         """
         INSERT INTO
             stops (journey_id, stop_type, station_tiploc, working_arrival, working_departure, cancelled, platform)
         VALUES
-            (?, ?, ?, ?, ?, ?, ?);
+            (%s, %s, %s, %s, %s, %s, %s);
         """,
         (
             operational_intermediate.journey.rid,
@@ -148,7 +149,7 @@ def parse_operational_intermediate(record: ET.Element, tiplocs: List[str], journ
             operational_intermediate.workingTimeDeparture,
             operational_intermediate.cancelled,
             operational_intermediate.platform
-        ),
+        )
     )
     Database.commit()
     print("OPIP")
@@ -167,12 +168,12 @@ def parse_passing(record: ET.Element, tiplocs: List[str], journey: collection.ti
 
     if passing.locationTIPLOC not in tiplocs: return
 
-    Database.cursor().execute(
+    Database.execute(
         """
         INSERT INTO
             stops (journey_id, stop_type, station_tiploc, working_passing, cancelled, platform)
         VALUES
-            (?, ?, ?, ?, ?, ?);
+            (%s, %s, %s, %s, %s, %s);
         """,
         (
             passing.journey.rid,
@@ -181,7 +182,7 @@ def parse_passing(record: ET.Element, tiplocs: List[str], journey: collection.ti
             passing.workingTimePassing,
             passing.cancelled,
             passing.platform
-        ),
+        )
     )
     Database.commit()
     print("PP")
@@ -203,12 +204,12 @@ def parse_destination(record: ET.Element, tiplocs: List[str], journey: collectio
 
     if destination.locationTIPLOC not in tiplocs: return
 
-    Database.cursor().execute(
+    Database.execute(
         """
         INSERT INTO
             stops (journey_id, stop_type, station_tiploc, working_arrival, working_departure, cancelled, platform, public_arrival, public_departure)
         VALUES
-            (?, ?, ?, ?, ?, ?, ?, ?, ?);
+            (%s, %s, %s, %s, %s, %s, %s, %s, %s);
         """,
         (
             destination.journey.rid,
@@ -220,7 +221,7 @@ def parse_destination(record: ET.Element, tiplocs: List[str], journey: collectio
             destination.platform,
             destination.publicTimeArrival,
             destination.publicTimeDeparture
-        ),
+        )
     )
     Database.commit()
     print("DT")
@@ -240,12 +241,12 @@ def parse_operational_destination(record: ET.Element, tiplocs: List[str], journe
 
     if operational_destination.locationTIPLOC not in tiplocs: return
 
-    Database.cursor().execute(
+    Database.execute(
         """
         INSERT INTO
             stops (journey_id, stop_type, station_tiploc, working_arrival, working_departure, cancelled, platform)
         VALUES
-            (?, ?, ?, ?, ?, ?, ?);
+            (%s, %s, %s, %s, %s, %s, %s);
         """,
         (
             operational_destination.journey.rid,
@@ -255,7 +256,7 @@ def parse_operational_destination(record: ET.Element, tiplocs: List[str], journe
             operational_destination.workingTimeDeparture,
             operational_destination.cancelled,
             operational_destination.platform
-        ),
+        )
     )
     Database.commit()
     print("OPDT")
@@ -278,12 +279,12 @@ def parse_journey(record: ET.Element, namespace_dictionary: dict[str, str], date
     if journey.isPassengerService == False: return
     if journey.startDate != date: return
 
-    Database.cursor().execute(
+    Database.execute(
         """
         INSERT INTO
             journeys (id, train_operator_code, train_category, passenger_service, deleted)
         VALUES
-            (?, ?, ?, ?, ?)
+            (%s, %s, %s, %s, %s)
         ON CONFLICT (id)
         DO UPDATE SET
             train_operator_code = EXCLUDED.train_operator_code,
@@ -297,7 +298,7 @@ def parse_journey(record: ET.Element, namespace_dictionary: dict[str, str], date
             journey.trainCategory,
             journey.isPassengerService,
             journey.isDeleted
-        ),
+        )
     )
     Database.commit()
 

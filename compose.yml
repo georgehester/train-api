@@ -1,0 +1,25 @@
+name: vulpz-train-api
+services:
+  database:
+    container_name: database
+    image: postgres:18
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: application
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: train
+    ports:
+      - "5432:5432"
+    volumes:
+      - database:/var/lib/postgresql
+  tile-server:
+    container_name: tile-server
+    image: maptiler/tileserver-gl
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/data
+    command: --file united-kingdom.mbtiles
+
+volumes:
+  database:
