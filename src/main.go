@@ -1,10 +1,12 @@
 package main
 
 import (
-	"database/sql"
+	"context"
 	"github.com/gin-gonic/gin"
-	_ "github.com/mattn/go-sqlite3"
+	"github.com/jackc/pgx/v5"
+	"github.com/patrickmn/go-cache"
 	"log"
+	"time"
 	"vulpz/train-api/src/handlers"
 )
 
@@ -14,18 +16,23 @@ import (
 // @host            api.train.vulpz.com
 // @BasePath        /
 func main() {
-	var database *sql.DB
+	var database *pgx.Conn
 	var databaseError error
+	context := context.Background()
 
-	database, databaseError = sql.Open("sqlite3", "train.db")
+	database, databaseError = pgx.Connect(
+		context,
+		"user=application password=password host=localhost port=5432 dbname=train sslmode=disable",
+	)
 	if databaseError != nil {
 		log.Fatal(databaseError)
 	}
 
-	defer database.Close()
+	defer database.Close(context)
 
 	environment := &handlers.Environment{
 		Database: database,
+		Cache:    cache.New(5*time.Minute, 10*time.Minute),
 	}
 
 	router := gin.Default()
@@ -40,6 +47,7 @@ func main() {
 	protected.Use(CORSMiddleware())
 	protected.GET("/health", handlers.HealthHandler)
 	protected.GET("/stations", environment.StationsHandler)
+	protected.GET("/stations.geojson", environment.StationsGeoJSONHandler)
 
 	router.Run()
 }
