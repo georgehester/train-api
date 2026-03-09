@@ -6,6 +6,7 @@ import (
 	"vulpz/train-api/src/api"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -158,4 +159,41 @@ func (environment *Environment) GetApplications(context *gin.Context) {
 	}
 
 	context.JSON(http.StatusOK, applicationList)
+}
+
+// CreateCustomer creates a new customer.
+// @Summary      Create a new customer
+// @Description  Creates a new customer with the provided details
+// @Tags         administration
+// @Accept       json
+// @Produce      json
+// @Param        customer  body      Customer  true  "Customer data"
+// @Success      201  {object}  Customer
+// @Failure      400  {object}  ErrorResponse
+// @Failure      500  {object}  ErrorResponse
+// @Router       /administration/customer [post]
+func (environment *Environment) CreateCustomer(context *gin.Context) {
+	var customer Customer
+
+	if bindError := context.ShouldBindJSON(&customer); bindError != nil {
+		api.SendErrorResponse(context, http.StatusBadRequest, "Malformed Request Body")
+		return
+	}
+
+	if customer.Email == "" || customer.Forename == "" || customer.Surname == "" {
+		api.SendErrorResponse(context, http.StatusBadRequest, "Malformed Request Body")
+		return
+	}
+
+	customer.Id = uuid.New().String()
+
+	insertError := environment.Database.QueryRow(context,
+		"INSERT INTO customers (id, email, forename, surname) VALUES ($1, $2, $3, $4) RETURNING id, email, forename, surname;",
+		customer.Id, customer.Email, customer.Forename, customer.Surname).Scan(&customer.Id, &customer.Email, &customer.Forename, &customer.Surname)
+	if insertError != nil {
+		api.SendErrorResponse(context, http.StatusInternalServerError, "Failed To Create Customer")
+		return
+	}
+
+	context.JSON(http.StatusCreated, customer)
 }
