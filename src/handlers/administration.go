@@ -4,44 +4,22 @@ import (
 	"log"
 	"net/http"
 	"vulpz/train-api/src/api"
+	"vulpz/train-api/src/model"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 )
 
-type Customer struct {
-	Id       string `json:"id"`
-	Email    string `json:"email"`
-	Forename string `json:"forename"`
-	Surname  string `json:"surname"`
-}
-
-type Application struct {
-	Id         string `json:"id"`
-	Name       string `json:"name"`
-	Key        string `json:"key"`
-	CustomerId string `json:"customerId"`
-	Approved   bool   `json:"approved"`
-}
-
-type CustomerWithApplications struct {
-	Id           string        `json:"id"`
-	Email        string        `json:"email"`
-	Forename     string        `json:"forename"`
-	Surname      string        `json:"surname"`
-	Applications []Application `json:"applications"`
-}
-
 // GetAllCustomers returns the list of all customers.
 // @Summary      Get all customers
 // @Description  Responds with a list of all customers
 // @Tags         administration
 // @Produce      json
-// @Success      200  {array}  Customer
-// @Failure      500  {object} ErrorResponse
+// @Success      200  {array}  model.Customer
+// @Failure      500  {object} model.ErrorResponse
 // @Router       /administration/customer [get]
-func (environment *Environment) GetCustomers(context *gin.Context) {
+func (environment *Environment) GetCustomersHandler(context *gin.Context) {
 	rows, databaseError := environment.Database.Query(context, "SELECT id, email, forename, surname FROM customers;")
 	if databaseError != nil {
 		log.Fatal(databaseError)
@@ -50,10 +28,10 @@ func (environment *Environment) GetCustomers(context *gin.Context) {
 	}
 	defer rows.Close()
 
-	var customerList []Customer
+	var customerList []model.Customer
 
 	for rows.Next() {
-		var customer Customer
+		var customer model.Customer
 
 		if scanError := rows.Scan(&customer.Id, &customer.Email, &customer.Forename, &customer.Surname); scanError != nil {
 			api.SendErrorResponse(context, http.StatusInternalServerError, "Failed To Parse Customers")
@@ -72,14 +50,14 @@ func (environment *Environment) GetCustomers(context *gin.Context) {
 // @Tags         administration
 // @Produce      json
 // @Param        id   path      string  true  "Customer ID"
-// @Success      200  {object}  CustomerWithApplications
-// @Failure      404  {object}  ErrorResponse
-// @Failure      500  {object}  ErrorResponse
+// @Success      200  {object}  model.CustomerWithApplications
+// @Failure      404  {object}  model.ErrorResponse
+// @Failure      500  {object}  model.ErrorResponse
 // @Router       /administration/customer/{id} [get]
-func (environment *Environment) GetCustomer(context *gin.Context) {
+func (environment *Environment) GetCustomerHandler(context *gin.Context) {
 	customerId := context.Param("id")
 
-	var customer CustomerWithApplications
+	var customer model.CustomerWithApplications
 	customerError := environment.Database.QueryRow(context, "SELECT id, email, forename, surname FROM customers WHERE id = $1;", customerId).Scan(&customer.Id, &customer.Email, &customer.Forename, &customer.Surname)
 	if customerError != nil {
 		if customerError == pgx.ErrNoRows {
@@ -97,10 +75,10 @@ func (environment *Environment) GetCustomer(context *gin.Context) {
 	}
 	defer rows.Close()
 
-	customer.Applications = []Application{}
+	customer.Applications = []model.Application{}
 
 	for rows.Next() {
-		var application Application
+		var application model.Application
 
 		if scanError := rows.Scan(&application.Id, &application.Name, &application.Key, &application.CustomerId, &application.Approved); scanError != nil {
 			api.SendErrorResponse(context, http.StatusInternalServerError, "Failed To Parse Applications")
@@ -119,11 +97,11 @@ func (environment *Environment) GetCustomer(context *gin.Context) {
 // @Tags         administration
 // @Produce      json
 // @Param        id   path      string  true  "Customer ID"
-// @Success      200  {array}   Application
-// @Failure      404  {object}  ErrorResponse
-// @Failure      500  {object}  ErrorResponse
+// @Success      200  {array}   model.Application
+// @Failure      404  {object}  model.ErrorResponse
+// @Failure      500  {object}  model.ErrorResponse
 // @Router       /administration/customer/{id}/application [get]
-func (environment *Environment) GetApplications(context *gin.Context) {
+func (environment *Environment) GetCustomerApplicationsHandler(context *gin.Context) {
 	customerId := context.Param("id")
 
 	var exists bool
@@ -145,10 +123,10 @@ func (environment *Environment) GetApplications(context *gin.Context) {
 	}
 	defer rows.Close()
 
-	var applicationList []Application
+	var applicationList []model.Application
 
 	for rows.Next() {
-		var application Application
+		var application model.Application
 
 		if scanError := rows.Scan(&application.Id, &application.Name, &application.Key, &application.CustomerId, &application.Approved); scanError != nil {
 			api.SendErrorResponse(context, http.StatusInternalServerError, "Failed To Parse Applications")
@@ -167,13 +145,13 @@ func (environment *Environment) GetApplications(context *gin.Context) {
 // @Tags         administration
 // @Accept       json
 // @Produce      json
-// @Param        customer  body      Customer  true  "Customer data"
-// @Success      201  {object}  Customer
-// @Failure      400  {object}  ErrorResponse
-// @Failure      500  {object}  ErrorResponse
+// @Param        customer  body      model.Customer  true  "Customer data"
+// @Success      201  {object}  model.Customer
+// @Failure      400  {object}  model.ErrorResponse
+// @Failure      500  {object}  model.ErrorResponse
 // @Router       /administration/customer [post]
-func (environment *Environment) CreateCustomer(context *gin.Context) {
-	var customer Customer
+func (environment *Environment) CreateCustomerHandler(context *gin.Context) {
+	var customer model.Customer
 
 	if bindError := context.ShouldBindJSON(&customer); bindError != nil {
 		api.SendErrorResponse(context, http.StatusBadRequest, "Malformed Request Body")

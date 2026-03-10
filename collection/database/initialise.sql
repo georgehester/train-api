@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS stops (
 CREATE TABLE IF NOT EXISTS administrators (
     id TEXT PRIMARY KEY,
     email TEXT NOT NULL,
+    hash TEXT NOT NULL,
     forename TEXT NOT NULL,
     surname TEXT NOT NULL
 );
@@ -45,6 +46,7 @@ CREATE TABLE IF NOT EXISTS administrators (
 CREATE TABLE IF NOT EXISTS customers (
     id TEXT PRIMARY KEY,
     email TEXT NOT NULL,
+    hash TEXT NOT NULL,
     forename TEXT NOT NULL,
     surname TEXT NOT NULL
 );

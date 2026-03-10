@@ -248,3 +248,4 @@ train.db
 *.env
 /static/
 /data/
+/secret/

@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"vulpz/train-api/src/api"
+	"vulpz/train-api/src/authentication"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
@@ -12,8 +13,9 @@ import (
 )
 
 type Environment struct {
-	Database *pgx.Conn
-	Cache    *cache.Cache
+	Database   *pgx.Conn
+	Cache      *cache.Cache
+	KeyManager *authentication.KeyManager
 }
 
 func HealthHandler(context *gin.Context) {

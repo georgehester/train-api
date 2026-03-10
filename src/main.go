@@ -2,12 +2,15 @@ package main
 
 import (
 	"context"
+	"log"
+	"time"
+	"vulpz/train-api/src/authentication"
+	"vulpz/train-api/src/configuration"
+	"vulpz/train-api/src/handlers"
+
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
 	"github.com/patrickmn/go-cache"
-	"log"
-	"time"
-	"vulpz/train-api/src/handlers"
 )
 
 // @title           Train API
@@ -16,43 +19,104 @@ import (
 // @host            api.train.vulpz.com
 // @BasePath        /
 func main() {
+	// Load the environment
+	executionEnvironment := configuration.LoadEnvironment()
+
+	// Connect to database
 	var database *pgx.Conn
 	var databaseError error
 	context := context.Background()
 
 	database, databaseError = pgx.Connect(
 		context,
-		"user=application password=password host=localhost port=5432 dbname=train sslmode=disable",
+		executionEnvironment.DatabaseConnectionString,
 	)
 	if databaseError != nil {
 		log.Fatal(databaseError)
 	}
-
 	defer database.Close(context)
 
+	// Load public and private keys
+	keyManager, keyError := authentication.NewKeyManager()
+	if keyError != nil {
+		log.Fatal(keyError)
+	}
+
 	environment := &handlers.Environment{
-		Database: database,
-		Cache:    cache.New(5*time.Minute, 10*time.Minute),
+		Database:   database,
+		Cache:      cache.New(5*time.Minute, 10*time.Minute),
+		KeyManager: keyManager,
 	}
 
 	router := gin.Default()
 
-	router.Use(CORSMiddleware())
+	// Add CORS headers dependent on current environment
+	if executionEnvironment.IsDevelopment() {
+		router.Use(DevelopmentCORSMiddleware())
+		router.GET("/hash", environment.CreateHashHandler)
+	} else {
+		router.Use(CORSMiddleware())
+	}
 
-	// Provide public endpoints
-	router.StaticFile("/documentation", "documentation/swagger.json")
+	// Provide documentation endpoints
+	documentationRouterGroup := router.Group("/")
+	documentationRouterGroup.StaticFile("/documentation", "/documentation/swagger.json")
 
-	// Create a protected router group behind authentication
-	protected := router.Group("/")
-	protected.Use(CORSMiddleware())
-	protected.GET("/health", handlers.HealthHandler)
-	protected.GET("/stations", environment.StationsHandler)
-	protected.GET("/stations.geojson", environment.StationsGeoJSONHandler)
+	// Provide unprotected endpoints
+	router.GET("/health", handlers.HealthHandler)
+	router.POST("/administration/login", environment.AdministrationLoginHandler)
+	router.POST("/login", environment.LoginHandler)
+	router.POST("/register", environment.RegisterHandler)
 
-	router.Run()
+	// Create a protected router group behind user authentication layer
+	protectedRouterGroup := router.Group("/")
+	protectedRouterGroup.Use(keyManager.Middleware())
+	protectedRouterGroup.GET("/customer/:id", environment.GetCustomerByIdHandler)
+
+	// Create an administration group to protect behind authentication layer
+	administrationRouterGroup := router.Group("/administration")
+	administrationRouterGroup.Use(keyManager.Middleware())
+	administrationRouterGroup.Use(keyManager.AdministrationMiddleware())
+	administrationRouterGroup.GET("/customer", environment.GetCustomersHandler)
+	administrationRouterGroup.POST("/customer", environment.CreateCustomerHandler)
+	administrationRouterGroup.GET("/customer/:id", environment.GetCustomerHandler)
+	administrationRouterGroup.GET("/customer/:id/application", environment.GetCustomerApplicationsHandler)
+
+	// Create a router group for product endpoints that require an API key
+	// productRouterGroup := router.Group("/")
+	// productRouterGroup.GET("/stations", environment.StationsHandler)
+	// productRouterGroup.GET("/stations.geojson", environment.StationsGeoJSONHandler)
+
+	router.Run(":" + executionEnvironment.Port)
 }
 
 func CORSMiddleware() gin.HandlerFunc {
+	return func(context *gin.Context) {
+		context.Writer.Header().Set("Access-Control-Allow-Origin", "train.vulpz.com")
+
+		if context.Request.Method == "OPTIONS" {
+			context.AbortWithStatus(204)
+			return
+		}
+
+		context.Next()
+	}
+}
+
+func CORSDocumentationMiddleware() gin.HandlerFunc {
+	return func(context *gin.Context) {
+		context.Writer.Header().Set("Access-Control-Allow-Origin", "documentation.train.vulpz.com")
+
+		if context.Request.Method == "OPTIONS" {
+			context.AbortWithStatus(204)
+			return
+		}
+
+		context.Next()
+	}
+}
+
+func DevelopmentCORSMiddleware() gin.HandlerFunc {
 	return func(context *gin.Context) {
 		context.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 

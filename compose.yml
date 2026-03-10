@@ -20,6 +20,35 @@ services:
     volumes:
       - ./data:/data
     command: --file united-kingdom.mbtiles
+  application:
+    build:
+      context: .
+      dockerfile: dockerfile
+    container_name: application
+    restart: unless-stopped
+    secrets:
+      - key-private
+      - key-public
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - ENVIRONMENT=development
+      - DATABASE_HOST=database
+      - DATABASE_PORT=5432
+      - DATABASE_USERNAME=application
+      - DATABASE_PASSWORD=password
+      - DATABASE_NAME=train
+    depends_on:
+      - database
+    volumes:
+      - ./documentation:/documentation:ro
+
+secrets:
+  key-private:
+    file: ./secret/base64/ed25519
+  key-public:
+    file: ./secret/base64/ed25519.pub
 
 volumes:
   database:
