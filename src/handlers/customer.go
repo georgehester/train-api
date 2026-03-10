@@ -7,13 +7,9 @@ import (
 	"vulpz/train-api/src/model"
 
 	"github.com/gin-gonic/gin"
-	// "github.com/google/uuid"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 )
-
-type CreateApplicationRequest struct {
-	Name string `json:"name" binding:"required"`
-}
 
 // @Summary      Get customer data
 // @Description  Returns all customer data including applications
@@ -87,185 +83,275 @@ func (environment *Environment) GetCustomerByIdHandler(context *gin.Context) {
 	context.JSON(http.StatusOK, customer)
 }
 
-// // @Summary      Get customer applications
-// // @Description  Returns all applications for a customer, blanking out key if not approved
-// // @Tags         Customer
-// // @Produce      json
-// // @Param        id   path      string  true  "Customer ID"
-// // @Success      200  {array}   model.Application
-// // @Failure      404  {object}  model.ErrorResponse
-// // @Failure      500  {object}  model.ErrorResponse
-// // @Router       /customer/{id}/application [get]
-// func (environment *Environment) GetCustomerApplicationsHandler(context *gin.Context) {
-// 	customerId := context.Param("id")
+// @Summary      Create application
+// @Description  Creates a new application for the authenticated customer
+// @Tags         Customer
+// @Accept       json
+// @Produce      json
+// @Param        id    path      string                    true  "Customer ID"
+// @Param        body  body      CreateApplicationRequest  true  "Application details"
+// @Success      201   {object}  model.Application
+// @Failure      400   {object}  model.ErrorResponse
+// @Failure      403   {object}  model.ErrorResponse
+// @Failure      404   {object}  model.ErrorResponse
+// @Failure      500   {object}  model.ErrorResponse
+// @Router       /customer/{id}/application [post]
+func (environment *Environment) CreateApplicationHandler(context *gin.Context) {
+	customerId := context.Param("customerId")
 
-// 	// Verify customer exists
-// 	var exists bool
-// 	existsError := environment.Database.QueryRow(
-// 		context,
-// 		"SELECT EXISTS(SELECT 1 FROM customers WHERE id = $1)",
-// 		customerId,
-// 	).Scan(&exists)
-// 	if existsError != nil {
-// 		api.SendErrorResponse(context, http.StatusInternalServerError, "Database Error")
-// 		return
-// 	}
+	claims, ok := context.MustGet(authentication.ClaimsKey).(*authentication.Claims)
+	if ok == false {
+		api.SendErrorResponse(context, http.StatusUnauthorized, "Failed To Fetching Token Claims")
+		return
+	}
 
-// 	if !exists {
-// 		api.SendErrorResponse(context, http.StatusNotFound, "Customer Not Found")
-// 		return
-// 	}
+	if claims.Id != customerId {
+		api.SendErrorResponse(context, http.StatusForbidden, "Permission Denied")
+		return
+	}
 
-// 	rows, applicationsError := environment.Database.Query(
-// 		context,
-// 		"SELECT id, name, key, customer_id, approved FROM applications WHERE customer_id = $1",
-// 		customerId,
-// 	)
-// 	if applicationsError != nil {
-// 		api.SendErrorResponse(context, http.StatusInternalServerError, "Failed To Fetch Applications")
-// 		return
-// 	}
-// 	defer rows.Close()
+	var request model.CreateApplicationRequest
+	if bindError := context.ShouldBindJSON(&request); bindError != nil {
+		api.SendErrorResponse(context, http.StatusBadRequest, "Malformed Request Body")
+		return
+	}
 
-// 	var applicationList []model.Application
+	var application model.Application
+	application.Id = uuid.New().String()
+	application.Name = request.Name
 
-// 	for rows.Next() {
-// 		var application model.Application
+	generatedKey, keyError := authentication.GenerateRandomApplicationKey()
+	if keyError != nil {
+		api.SendErrorResponse(context, http.StatusInternalServerError, "Failed To Generate Application Key")
+		return
+	}
 
-// 		if scanError := rows.Scan(&application.Id, &application.Name, &application.Key, &application.CustomerId, &application.Approved); scanError != nil {
-// 			api.SendErrorResponse(context, http.StatusInternalServerError, "Failed To Parse Applications")
-// 			return
-// 		}
+	application.Key = generatedKey
+	application.CustomerId = customerId
 
-// 		// Blank out key if not approved
-// 		if !application.Approved {
-// 			application.Key = ""
-// 		}
+	createError := environment.Database.QueryRow(
+		context,
+		"INSERT INTO applications (id, name, key, customer_id) VALUES ($1, $2, $3, $4) RETURNING id, name, key, customer_id, approved",
+		application.Id,
+		application.Name,
+		application.Key,
+		application.CustomerId,
+	).Scan(&application.Id, &application.Name, &application.Key, &application.CustomerId, &application.Approved)
+	if createError != nil {
+		if createError == pgx.ErrNoRows {
+			api.SendErrorResponse(context, http.StatusNotFound, "Customer Not Found")
+		} else {
+			api.SendErrorResponse(context, http.StatusInternalServerError, "Failed To Create Application")
+		}
+		return
+	}
 
-// 		applicationList = append(applicationList, application)
-// 	}
+	if !application.Approved {
+		application.Key = ""
+	}
 
-// 	context.JSON(http.StatusOK, applicationList)
-// }
+	context.JSON(http.StatusCreated, application)
+}
 
-// // @Summary      Create application
-// // @Description  Creates a new application for the customer
-// // @Tags         Customer
-// // @Accept       json
-// // @Param        id    path      string                       true  "Customer ID"
-// // @Param        body  body      CreateApplicationRequest     true  "Application data"
-// // @Produce      json
-// // @Success      201   {object}  model.Application
-// // @Failure      400   {object}  model.ErrorResponse "Malformed Request Body"
-// // @Failure      404   {object}  model.ErrorResponse "Customer Not Found"
-// // @Failure      500   {object}  model.ErrorResponse "Internal Server Error"
-// // @Router       /customer/{id}/application [post]
-// func (environment *Environment) CreateApplicationHandler(context *gin.Context) {
-// 	customerId := context.Param("id")
-// 	var request CreateApplicationRequest
+// @Summary      Get customer applications
+// @Description  Fetches all application details for the authenticated customer
+// @Tags         Customer
+// @Produce      json
+// @Param        id   path      string               true  "Customer ID"
+// @Success      200  {array}   model.Application
+// @Failure      403  {object}  model.ErrorResponse
+// @Failure      500  {object}  model.ErrorResponse
+// @Router       /customer/{id}/application [get]
+func (environment *Environment) GetApplicationsHandler(context *gin.Context) {
+	customerId := context.Param("customerId")
 
-// 	if bindError := context.ShouldBindJSON(&request); bindError != nil {
-// 		api.SendErrorResponse(context, http.StatusBadRequest, "Malformed Request Body")
-// 		return
-// 	}
+	claims, ok := context.MustGet(authentication.ClaimsKey).(*authentication.Claims)
+	if ok == false {
+		api.SendErrorResponse(context, http.StatusUnauthorized, "Failed To Fetching Token Claims")
+		return
+	}
 
-// 	if request.Name == "" {
-// 		api.SendErrorResponse(context, http.StatusBadRequest, "Malformed Request Body")
-// 		return
-// 	}
+	if claims.Id != customerId {
+		api.SendErrorResponse(context, http.StatusForbidden, "Permission Denied")
+		return
+	}
 
-// 	// Verify customer exists
-// 	var exists bool
-// 	existsError := environment.Database.QueryRow(
-// 		context,
-// 		"SELECT EXISTS(SELECT 1 FROM customers WHERE id = $1)",
-// 		customerId,
-// 	).Scan(&exists)
-// 	if existsError != nil {
-// 		api.SendErrorResponse(context, http.StatusInternalServerError, "Database Error")
-// 		return
-// 	}
+	rows, queryError := environment.Database.Query(
+		context,
+		"SELECT id, name, key, customer_id, approved FROM applications WHERE customer_id = $1",
+		customerId,
+	)
+	if queryError != nil {
+		api.SendErrorResponse(context, http.StatusInternalServerError, "Failed To Fetch Applications")
+		return
+	}
+	defer rows.Close()
 
-// 	if !exists {
-// 		api.SendErrorResponse(context, http.StatusNotFound, "Customer Not Found")
-// 		return
-// 	}
+	applicationList := []model.Application{}
 
-// 	// Create new application
-// 	application := model.Application{
-// 		Id:         uuid.New().String(),
-// 		Name:       request.Name,
-// 		CustomerId: customerId,
-// 		Approved:   false,
-// 		Key:        "", // Will be generated upon approval
-// 	}
+	for rows.Next() {
+		var application model.Application
 
-// 	insertError := environment.Database.QueryRow(
-// 		context,
-// 		"INSERT INTO applications (id, name, key, customer_id, approved) VALUES ($1, $2, $3, $4, $5) RETURNING id, name, key, customer_id, approved",
-// 		application.Id,
-// 		application.Name,
-// 		application.Key,
-// 		application.CustomerId,
-// 		application.Approved,
-// 	).Scan(&application.Id, &application.Name, &application.Key, &application.CustomerId, &application.Approved)
-// 	if insertError != nil {
-// 		api.SendErrorResponse(context, http.StatusInternalServerError, "Failed To Create Application")
-// 		return
-// 	}
+		if scanError := rows.Scan(&application.Id, &application.Name, &application.Key, &application.CustomerId, &application.Approved); scanError != nil {
+			api.SendErrorResponse(context, http.StatusInternalServerError, "Failed To Parse Applications")
+			return
+		}
 
-// 	context.JSON(http.StatusCreated, application)
-// }
+		if !application.Approved {
+			application.Key = ""
+		}
 
-// // @Summary      Delete application
-// // @Description  Deletes an application for the customer
-// // @Tags         Customer
-// // @Param        id              path      string  true  "Customer ID"
-// // @Param        application_id  query     string  true  "Application ID"
-// // @Produce      json
-// // @Success      204
-// // @Failure      400   {object}  model.ErrorResponse "Missing application_id"
-// // @Failure      404   {object}  model.ErrorResponse "Application Not Found"
-// // @Failure      500   {object}  model.ErrorResponse "Internal Server Error"
-// // @Router       /customer/{id}/application [delete]
-// func (environment *Environment) DeleteApplicationHandler(context *gin.Context) {
-// 	customerId := context.Param("id")
-// 	applicationId := context.Query("application_id")
+		applicationList = append(applicationList, application)
+	}
 
-// 	if applicationId == "" {
-// 		api.SendErrorResponse(context, http.StatusBadRequest, "Missing application_id Parameter")
-// 		return
-// 	}
+	context.JSON(http.StatusOK, applicationList)
+}
 
-// 	// Verify application exists and belongs to the customer
-// 	var exists bool
-// 	existsError := environment.Database.QueryRow(
-// 		context,
-// 		"SELECT EXISTS(SELECT 1 FROM applications WHERE id = $1 AND customer_id = $2)",
-// 		applicationId,
-// 		customerId,
-// 	).Scan(&exists)
-// 	if existsError != nil {
-// 		api.SendErrorResponse(context, http.StatusInternalServerError, "Database Error")
-// 		return
-// 	}
+// @Summary      Get application
+// @Description  Fetches application details for the authenticated customer
+// @Tags         Customer
+// @Produce      json
+// @Param        id     path      string             true  "Customer ID"
+// @Param        appId  path      string             true  "Application ID"
+// @Success      200    {object}  model.Application
+// @Failure      403    {object}  model.ErrorResponse
+// @Failure      404    {object}  model.ErrorResponse
+// @Failure      500    {object}  model.ErrorResponse
+// @Router       /customer/{id}/application/{appId} [get]
+func (environment *Environment) GetApplicationHandler(context *gin.Context) {
+	customerId := context.Param("customerId")
+	applicationId := context.Param("applicationId")
 
-// 	if !exists {
-// 		api.SendErrorResponse(context, http.StatusNotFound, "Application Not Found")
-// 		return
-// 	}
+	claims, ok := context.MustGet(authentication.ClaimsKey).(*authentication.Claims)
+	if ok == false {
+		api.SendErrorResponse(context, http.StatusUnauthorized, "Failed To Fetching Token Claims")
+		return
+	}
 
-// 	// Delete the application
-// 	deleteError := environment.Database.QueryRow(
-// 		context,
-// 		"DELETE FROM applications WHERE id = $1",
-// 		applicationId,
-// 	).Scan()
+	if claims.Id != customerId {
+		api.SendErrorResponse(context, http.StatusForbidden, "Permission Denied")
+		return
+	}
 
-// 	if deleteError != nil && deleteError != pgx.ErrNoRows {
-// 		api.SendErrorResponse(context, http.StatusInternalServerError, "Failed To Delete Application")
-// 		return
-// 	}
+	var application model.Application
+	queryError := environment.Database.QueryRow(
+		context,
+		"SELECT id, name, key, customer_id, approved FROM applications WHERE id = $1 AND customer_id = $2",
+		applicationId,
+		customerId,
+	).Scan(&application.Id, &application.Name, &application.Key, &application.CustomerId, &application.Approved)
+	if queryError != nil {
+		if queryError == pgx.ErrNoRows {
+			api.SendErrorResponse(context, http.StatusNotFound, "Application Not Found")
+		} else {
+			api.SendErrorResponse(context, http.StatusInternalServerError, "Database Error")
+		}
+		return
+	}
 
-// 	context.Status(http.StatusNoContent)
-// }
+	if !application.Approved {
+		application.Key = ""
+	}
+
+	context.JSON(http.StatusOK, application)
+}
+
+// @Summary      Delete application
+// @Description  Deletes an application for the authenticated customer
+// @Tags         Customer
+// @Param        id     path      string             true  "Customer ID"
+// @Param        appId  path      string             true  "Application ID"
+// @Success      204
+// @Failure      403   {object}  model.ErrorResponse
+// @Failure      404   {object}  model.ErrorResponse
+// @Failure      500   {object}  model.ErrorResponse
+// @Router       /customer/{id}/application/{appId} [delete]
+func (environment *Environment) DeleteApplicationHandler(context *gin.Context) {
+	customerId := context.Param("customerId")
+	applicationId := context.Param("applicationId")
+
+	claims, ok := context.MustGet(authentication.ClaimsKey).(*authentication.Claims)
+	if ok == false {
+		api.SendErrorResponse(context, http.StatusUnauthorized, "Failed To Fetching Token Claims")
+		return
+	}
+
+	if claims.Id != customerId {
+		api.SendErrorResponse(context, http.StatusForbidden, "Permission Denied")
+		return
+	}
+
+	deleteCommand, deleteError := environment.Database.Exec(
+		context,
+		"DELETE FROM applications WHERE id = $1 AND customer_id = $2",
+		applicationId,
+		customerId,
+	)
+	if deleteError != nil {
+		api.SendErrorResponse(context, http.StatusInternalServerError, "Failed To Delete Application")
+		return
+	}
+
+	if deleteCommand.RowsAffected() == 0 {
+		api.SendErrorResponse(context, http.StatusNotFound, "Application Not Found")
+		return
+	}
+
+	context.Status(http.StatusNoContent)
+}
+
+// @Summary      Refresh application key
+// @Description  Refreshes the API key associated with an application
+// @Tags         Customer
+// @Produce      json
+// @Param        id     path      string             true  "Customer ID"
+// @Param        appId  path      string             true  "Application ID"
+// @Success      200   {object}  model.Application
+// @Failure      403   {object}  model.ErrorResponse
+// @Failure      404   {object}  model.ErrorResponse
+// @Failure      500   {object}  model.ErrorResponse
+// @Router       /customer/{id}/application/{appId}/key/refresh [post]
+func (environment *Environment) RefreshApplicationKeyHandler(context *gin.Context) {
+	customerId := context.Param("customerId")
+	applicationId := context.Param("applicationId")
+
+	claims, ok := context.MustGet(authentication.ClaimsKey).(*authentication.Claims)
+	if ok == false {
+		api.SendErrorResponse(context, http.StatusUnauthorized, "Failed To Fetching Token Claims")
+		return
+	}
+
+	if claims.Id != customerId {
+		api.SendErrorResponse(context, http.StatusForbidden, "Permission Denied")
+		return
+	}
+
+	var application model.Application
+	generatedKey, keyError := authentication.GenerateRandomApplicationKey()
+	if keyError != nil {
+		api.SendErrorResponse(context, http.StatusInternalServerError, "Failed To Generate Application Key")
+		return
+	}
+
+	updateError := environment.Database.QueryRow(
+		context,
+		"UPDATE applications SET key = $1 WHERE id = $2 AND customer_id = $3 RETURNING id, name, key, customer_id, approved",
+		generatedKey,
+		applicationId,
+		customerId,
+	).Scan(&application.Id, &application.Name, &application.Key, &application.CustomerId, &application.Approved)
+	if updateError != nil {
+		if updateError == pgx.ErrNoRows {
+			api.SendErrorResponse(context, http.StatusNotFound, "Application Not Found")
+		} else {
+			api.SendErrorResponse(context, http.StatusInternalServerError, "Failed To Refresh Application Key")
+		}
+		return
+	}
+
+	if !application.Approved {
+		application.Key = ""
+	}
+
+	context.JSON(http.StatusOK, application)
+}

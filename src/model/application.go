@@ -7,3 +7,7 @@ type Application struct {
 	CustomerId string `json:"customerId"`
 	Approved   bool   `json:"approved"`
 } // @name Application
+
+type CreateApplicationRequest struct {
+	Name string `json:"name" binding:"required"`
+} // @name CreateApplicationRequest

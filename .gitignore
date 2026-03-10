@@ -249,3 +249,8 @@ train.db
 /static/
 /data/
 /secret/
+/report/**
+!/report/report.tex
+!/report/report.pdf
+!/report/images
+!/report/images/**

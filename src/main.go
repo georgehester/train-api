@@ -72,6 +72,11 @@ func main() {
 	protectedRouterGroup := router.Group("/")
 	protectedRouterGroup.Use(keyManager.Middleware())
 	protectedRouterGroup.GET("/customer/:id", environment.GetCustomerByIdHandler)
+	protectedRouterGroup.POST("/customer/:customerId/application", environment.CreateApplicationHandler)
+	protectedRouterGroup.GET("/customer/:customerId/application", environment.GetApplicationsHandler)
+	protectedRouterGroup.GET("/customer/:customerId/application/:applicationId", environment.GetApplicationHandler)
+	protectedRouterGroup.DELETE("/customer/:customerId/application/:applicationId", environment.DeleteApplicationHandler)
+	protectedRouterGroup.POST("/customer/:customerId/application/:applicationId/key/refresh", environment.RefreshApplicationKeyHandler)
 
 	// Create an administration group to protect behind authentication layer
 	administrationRouterGroup := router.Group("/administration")
@@ -81,11 +86,14 @@ func main() {
 	administrationRouterGroup.POST("/customer", environment.CreateCustomerHandler)
 	administrationRouterGroup.GET("/customer/:id", environment.GetCustomerHandler)
 	administrationRouterGroup.GET("/customer/:id/application", environment.GetCustomerApplicationsHandler)
+	administrationRouterGroup.POST("/customer/:customerId/application/:applicationId/approve", environment.ApproveApplicationHandler)
 
 	// Create a router group for product endpoints that require an API key
-	// productRouterGroup := router.Group("/")
-	// productRouterGroup.GET("/stations", environment.StationsHandler)
-	// productRouterGroup.GET("/stations.geojson", environment.StationsGeoJSONHandler)
+	productRouterGroup := router.Group("/")
+	productRouterGroup.Use(keyManager.ApplicationKeyMiddleware(database))
+	productRouterGroup.GET("/station", environment.GetStationsHandler)
+	productRouterGroup.GET("/station/:stationId", environment.GetStationHandler)
+	productRouterGroup.GET("/stations.geojson", environment.GetStationsGeoJSONHandler)
 
 	router.Run(":" + executionEnvironment.Port)
 }

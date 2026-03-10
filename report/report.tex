@@ -1,0 +1,147 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage[english]{babel}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+\usepackage{minted}
+% \usepackage{natbib}
+% \bibliographystyle{abbrvnat}
+% \setcitestyle{authoryear,open={(},close={)}}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{multicol}
+\usepackage{listings}
+\usepackage{gensymb}
+\usepackage{wrapfig}
+\usepackage{graphicx}
+\usepackage{fontspec}
+\usepackage{tabularx}
+\usepackage{amsfonts}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{fancyhdr}
+\usepackage{subcaption}
+
+\graphicspath{ {./images/} }
+
+\pagestyle{fancy}
+\fancyhead{}
+\renewcommand{\headrulewidth}{0pt}
+\fancyfoot[L]{\footnotesize{George Hester (201124124) - COMP3011}}
+\fancyfoot[R]{\footnotesize{\thepage}}
+\fancyfoot[C]{}
+% \fancyfoot[C]{\includegraphics[height=8pt]{vulpz.png}}
+
+\renewcommand{\thesection}{\arabic{section}}
+% \setmonofont{Berkeley Mono Trial}
+% \setmainfont{Libre Baskerville}
+% \setmainfont{Monaspace Neon Light}
+% \setmainfont{Euclid Circular B}
+\setmainfont{TX-02 Retina}
+\setmonofont{TX-02 Bold}
+\usemintedstyle{vulpz}
+
+\begin{document}
+
+\noindent
+\Huge
+\textbf{Train API}
+\normalsize
+\noindent
+\newline
+\newline
+Updated - 10-03-2026
+
+\tableofcontents
+
+\newpage
+\section{Aside}
+
+"A computer can never be held accountable, therefore a computer must never make a management decision." - IBM
+
+\newpage
+\section{Data Collection / Manipulation}
+
+Generative AI struggles with understanding and parsing data from the Rail Data Marketplace. This is likely because the data is provided by real systems that have complicated documentation that is not included in the models training set giving it no reference points of how to understand the formats presented. The AI is dumb.
+
+\noindent
+\newline
+Our data was collected from a number of data sources provided by NRE (National Rail) and NWR (Network Rail) through the RDM (Rail Data Marketplace). The following resources were heavily used.
+
+\begin{itemize}
+  \item Network Rail Corpus
+  \item Network Rail Schedule
+  \item National Rail Knowledge Base Stations
+  \item National Rail Darwin Push Port (Archive Provided By David Wheatley)
+  \item National Rail Darwin Timetable
+\end{itemize}
+
+\noindent
+Once our data was collected in its respective formats we could use python scripts provided in the \texttt{collection} folder to generate the SQL database needed for our API.
+
+\noindent
+\newline
+The first operation we must undertake is the creation of the \texttt{stations} table. We can run the Python module with the following command.
+
+\noindent
+\newline
+\texttt{python -m collection.stations.generate}
+
+\noindent
+\newline
+This command will generate the stations table combining data from Network Rail Corpus and the National Rail Knowledge Base Stations.
+
+\section{Architecture}
+
+For my API I chose to use the Go programming language. This choice was made on the basis that Go is a compiled static typed language which allows it to be highly performant when compared to APIs defined in other interpreted programming languages such as Python or JavaScript.
+
+\noindent
+\newline
+To make development of my API in Go simpler I chose to employ an API framework. In my case I chose to use a common well documented framework called Gin. This choice meant there was plenty of documentation of how to use the framework and that a LLM would likely have a good amount of training data related to the framework to infer from.
+
+\section{Authentication}
+
+Endpoints in my API are organised into three different levels of authorisation.
+
+\begin{itemize}
+  \item Product - This group covers endpoints that relate to the actual core date API provided, authentication at these endpoints does not require login.
+  \item Administration - Covers endpoints used by administrators to perform actions such as updating an application approval status.
+  \item Protected - Covers endpoints that the customer should manage, i.e. creating new applications, refreshing application keys.
+\end{itemize}
+
+\noindent
+Product endpoints rely on the Bearer authorisation scheme, this means that an application key can be used by an autonomous user to make requests. This allows for the development of external applications which make use of our API.
+
+\noindent
+\newline
+Administration endpoints make use of JWT (JSON Web Token) authorisation. A given administrator can login and retrieve a JSON Web Token. This token can then be used on subsequent requests to administration endpoints. In the JWT claims the \texttt{"type"} attribute is set to \texttt{administrator}, this allows us to check that the given requester should have access to the administrative endpoints.
+
+\noindent
+\newline
+Protected endpoints make use of the same JWT (JSON Web Token) authorisation. Once we have verified the validity of the token we can check that the customer requesting data has authorisation to access the customer data they are requesting. This is usually that the requested data is the customers own.
+
+//https://datatracker.ietf.org/doc/html/rfc6750
+
+\section{Generative AI Declaration}
+
+Generative AI was used to aid with the development of both the API application itself and the data manipulation scripts. The following Generative AI tools were used.
+
+\begin{itemize}
+  \item T3 Chat (\href{https://t3.chat}{t3.chat})
+\end{itemize}
+
+\noindent
+The T3 Chat tool allows usage of a wide range of LLM models in a chat interface which aided with the development of the application through prompts phrased as questions.
+
+\noindent
+\newline
+The primary model used through this tool was Claude Sonnet 4.6 due to its high LiveBench (\href{https://livebench.ai}{livebench.ai}) score and balanced token cost.
+
+% \begin{figure}[htbp]
+%   \centering
+%   \includegraphics[width=0.6\linewidth]{pwm.png}
+%   \caption{Timed PWM repeated every 20ms}
+%   \label{fig:pwm}
+% \end{figure}
+
+\end{document}

@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"vulpz/train-api/src/api"
+	"vulpz/train-api/src/authentication"
 	"vulpz/train-api/src/model"
 
 	"github.com/gin-gonic/gin"
@@ -174,4 +175,44 @@ func (environment *Environment) CreateCustomerHandler(context *gin.Context) {
 	}
 
 	context.JSON(http.StatusCreated, customer)
+}
+
+// ApproveApplication approves a specific application and issues a fresh API key.
+// @Summary      Approve application
+// @Description  Approves an application so an API key can be generated
+// @Tags         administration
+// @Produce      json
+// @Param        id   path      string             true  "Application ID"
+// @Success      200  {object}  model.Application
+// @Failure      404  {object}  model.ErrorResponse
+// @Failure      500  {object}  model.ErrorResponse
+// @Router       /administration/application/{id}/approve [post]
+func (environment *Environment) ApproveApplicationHandler(context *gin.Context) {
+	customerId := context.Param("customerId")
+	applicationId := context.Param("applicationId")
+
+	generatedKey, keyError := authentication.GenerateRandomApplicationKey()
+	if keyError != nil {
+		api.SendErrorResponse(context, http.StatusInternalServerError, "Failed To Generate Application Key")
+		return
+	}
+
+	var application model.Application
+	updateError := environment.Database.QueryRow(
+		context,
+		"UPDATE applications SET approved = TRUE, key = $1 WHERE id = $2 AND customer_id = $3 RETURNING id, name, key, customer_id, approved",
+		generatedKey,
+		applicationId,
+		customerId,
+	).Scan(&application.Id, &application.Name, &application.Key, &application.CustomerId, &application.Approved)
+	if updateError != nil {
+		if updateError == pgx.ErrNoRows {
+			api.SendErrorResponse(context, http.StatusNotFound, "Application Not Found")
+		} else {
+			api.SendErrorResponse(context, http.StatusInternalServerError, "Failed To Approve Application")
+		}
+		return
+	}
+
+	context.JSON(http.StatusOK, application)
 }
