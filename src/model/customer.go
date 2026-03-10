@@ -14,3 +14,9 @@ type CustomerWithApplications struct {
 	Surname      string        `json:"surname"`
 	Applications []Application `json:"applications"`
 } // @name CustomerWithApplications
+
+type CreateCustomerRequest struct {
+	Email    string `json:"email"`
+	Forename string `json:"forename"`
+	Surname  string `json:"surname"`
+} // @name Customer

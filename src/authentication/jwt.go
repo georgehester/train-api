@@ -1,12 +1,11 @@
 package authentication
 
 import (
-	"bytes"
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"os"
 	"time"
+	"vulpz/train-api/src/secret"
 
 	"crypto/ed25519"
 
@@ -60,17 +59,8 @@ func (keyManager *KeyManager) PublicKey() ed25519.PublicKey {
 	return keyManager.publicKey
 }
 
-func loadSecret(name string) ([]byte, error) {
-	data, err := os.ReadFile("/run/secrets/" + name)
-	if err != nil {
-		return nil, errors.New("Failed To Load Secret")
-	}
-
-	return bytes.TrimSpace(data), nil
-}
-
 func loadPrivateKey() (ed25519.PrivateKey, error) {
-	encoded, err := loadSecret("key-private")
+	encoded, err := secret.LoadSecret("key-private")
 	if err != nil {
 		return nil, errors.New("Private Key Could Not Be Loaded")
 	}
@@ -94,7 +84,7 @@ func loadPrivateKey() (ed25519.PrivateKey, error) {
 }
 
 func loadPublicKey() (ed25519.PublicKey, error) {
-	encoded, err := loadSecret("key-public")
+	encoded, err := secret.LoadSecret("key-public")
 	if err != nil {
 		return nil, errors.New("Public Key Could Not Be Loaded")
 	}

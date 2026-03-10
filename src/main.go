@@ -6,6 +6,7 @@ import (
 	"time"
 	"vulpz/train-api/src/authentication"
 	"vulpz/train-api/src/configuration"
+	"vulpz/train-api/src/email"
 	"vulpz/train-api/src/handlers"
 
 	"github.com/gin-gonic/gin"
@@ -42,10 +43,20 @@ func main() {
 		log.Fatal(keyError)
 	}
 
+	// Create email client
+	emailClient := email.EmailClient{
+		From:        "Train API <train@nightfoxdev.com>",
+		Username:    "george@nightfoxdev.com",
+		AppPassword: executionEnvironment.EmailAppPassword,
+		SMTPHost:    "smtppro.zoho.com",
+		SMTPPort:    "587",
+	}
+
 	environment := &handlers.Environment{
-		Database:   database,
-		Cache:      cache.New(5*time.Minute, 10*time.Minute),
-		KeyManager: keyManager,
+		Database:    database,
+		Cache:       cache.New(5*time.Minute, 10*time.Minute),
+		KeyManager:  keyManager,
+		EmailClient: &emailClient,
 	}
 
 	router := gin.Default()
@@ -71,7 +82,7 @@ func main() {
 	// Create a protected router group behind user authentication layer
 	protectedRouterGroup := router.Group("/")
 	protectedRouterGroup.Use(keyManager.Middleware())
-	protectedRouterGroup.GET("/customer/:id", environment.GetCustomerByIdHandler)
+	protectedRouterGroup.GET("/customer/:customerId", environment.GetCustomerByIdHandler)
 	protectedRouterGroup.POST("/customer/:customerId/application", environment.CreateApplicationHandler)
 	protectedRouterGroup.GET("/customer/:customerId/application", environment.GetApplicationsHandler)
 	protectedRouterGroup.GET("/customer/:customerId/application/:applicationId", environment.GetApplicationHandler)
@@ -84,8 +95,8 @@ func main() {
 	administrationRouterGroup.Use(keyManager.AdministrationMiddleware())
 	administrationRouterGroup.GET("/customer", environment.GetCustomersHandler)
 	administrationRouterGroup.POST("/customer", environment.CreateCustomerHandler)
-	administrationRouterGroup.GET("/customer/:id", environment.GetCustomerHandler)
-	administrationRouterGroup.GET("/customer/:id/application", environment.GetCustomerApplicationsHandler)
+	administrationRouterGroup.GET("/customer/:customerId", environment.GetCustomerHandler)
+	administrationRouterGroup.GET("/customer/:customerId/application", environment.GetCustomerApplicationsHandler)
 	administrationRouterGroup.POST("/customer/:customerId/application/:applicationId/approve", environment.ApproveApplicationHandler)
 
 	// Create a router group for product endpoints that require an API key

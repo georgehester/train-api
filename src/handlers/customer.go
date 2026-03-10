@@ -15,13 +15,13 @@ import (
 // @Description  Returns all customer data including applications
 // @Tags         Customer
 // @Produce      json
-// @Param        id   path      string  true  "Customer ID"
+// @Param        customerId   path      string  true  "Customer ID"
 // @Success      200  {object}  model.CustomerWithApplications
 // @Failure      404  {object}  model.ErrorResponse
 // @Failure      500  {object}  model.ErrorResponse
 // @Router       /customer/{id} [get]
 func (environment *Environment) GetCustomerByIdHandler(context *gin.Context) {
-	customerId := context.Param("id")
+	customerId := context.Param("customerId")
 
 	claims, ok := context.MustGet(authentication.ClaimsKey).(*authentication.Claims)
 	if ok == false {
@@ -88,7 +88,7 @@ func (environment *Environment) GetCustomerByIdHandler(context *gin.Context) {
 // @Tags         Customer
 // @Accept       json
 // @Produce      json
-// @Param        id    path      string                    true  "Customer ID"
+// @Param        customerId    path      string                    true  "Customer ID"
 // @Param        body  body      CreateApplicationRequest  true  "Application details"
 // @Success      201   {object}  model.Application
 // @Failure      400   {object}  model.ErrorResponse
@@ -157,7 +157,7 @@ func (environment *Environment) CreateApplicationHandler(context *gin.Context) {
 // @Description  Fetches all application details for the authenticated customer
 // @Tags         Customer
 // @Produce      json
-// @Param        id   path      string               true  "Customer ID"
+// @Param        customerId   path      string               true  "Customer ID"
 // @Success      200  {array}   model.Application
 // @Failure      403  {object}  model.ErrorResponse
 // @Failure      500  {object}  model.ErrorResponse
@@ -211,13 +211,13 @@ func (environment *Environment) GetApplicationsHandler(context *gin.Context) {
 // @Description  Fetches application details for the authenticated customer
 // @Tags         Customer
 // @Produce      json
-// @Param        id     path      string             true  "Customer ID"
-// @Param        appId  path      string             true  "Application ID"
+// @Param        customerId     path      string             true  "Customer ID"
+// @Param        applicationId  path      string             true  "Application ID"
 // @Success      200    {object}  model.Application
 // @Failure      403    {object}  model.ErrorResponse
 // @Failure      404    {object}  model.ErrorResponse
 // @Failure      500    {object}  model.ErrorResponse
-// @Router       /customer/{id}/application/{appId} [get]
+// @Router       /customer/{customerId}/application/{applicationId} [get]
 func (environment *Environment) GetApplicationHandler(context *gin.Context) {
 	customerId := context.Param("customerId")
 	applicationId := context.Param("applicationId")
@@ -259,13 +259,13 @@ func (environment *Environment) GetApplicationHandler(context *gin.Context) {
 // @Summary      Delete application
 // @Description  Deletes an application for the authenticated customer
 // @Tags         Customer
-// @Param        id     path      string             true  "Customer ID"
-// @Param        appId  path      string             true  "Application ID"
+// @Param        customerId     path      string             true  "Customer ID"
+// @Param        applicationId  path      string             true  "Application ID"
 // @Success      204
 // @Failure      403   {object}  model.ErrorResponse
 // @Failure      404   {object}  model.ErrorResponse
 // @Failure      500   {object}  model.ErrorResponse
-// @Router       /customer/{id}/application/{appId} [delete]
+// @Router       /customer/{customerId}/application/{applicationId} [delete]
 func (environment *Environment) DeleteApplicationHandler(context *gin.Context) {
 	customerId := context.Param("customerId")
 	applicationId := context.Param("applicationId")
@@ -304,13 +304,13 @@ func (environment *Environment) DeleteApplicationHandler(context *gin.Context) {
 // @Description  Refreshes the API key associated with an application
 // @Tags         Customer
 // @Produce      json
-// @Param        id     path      string             true  "Customer ID"
-// @Param        appId  path      string             true  "Application ID"
+// @Param        customerId     path      string             true  "Customer ID"
+// @Param        applicationId  path      string             true  "Application ID"
 // @Success      200   {object}  model.Application
 // @Failure      403   {object}  model.ErrorResponse
 // @Failure      404   {object}  model.ErrorResponse
 // @Failure      500   {object}  model.ErrorResponse
-// @Router       /customer/{id}/application/{appId}/key/refresh [post]
+// @Router       /customer/{customerId}/application/{applicationId}/key/refresh [post]
 func (environment *Environment) RefreshApplicationKeyHandler(context *gin.Context) {
 	customerId := context.Param("customerId")
 	applicationId := context.Param("applicationId")

@@ -3,12 +3,14 @@ package configuration
 import (
 	"fmt"
 	"os"
+	"vulpz/train-api/src/secret"
 )
 
 type Environment struct {
 	Environment              ApplicationEnvironment
 	Port                     string
 	DatabaseConnectionString string
+	EmailAppPassword         string
 }
 
 type ApplicationEnvironment string
@@ -23,16 +25,24 @@ func LoadEnvironment() Environment {
 		Port:                     loadPort(),
 		Environment:              loadApplicationEnvironment(),
 		DatabaseConnectionString: loadDatabaseConnectionString(),
+		EmailAppPassword:         loadEmailAppPassword(),
 	}
 }
 
 func loadPort() string {
 	port := os.Getenv("PORT")
-	fmt.Print("PORT - " + port)
 	if port == "" {
 		return "8000"
 	}
 	return port
+}
+
+func loadEmailAppPassword() string {
+	appPassword, loadError := secret.LoadSecret("email")
+	if loadError != nil {
+		return ""
+	}
+	return string(appPassword)
 }
 
 func loadApplicationEnvironment() ApplicationEnvironment {

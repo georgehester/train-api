@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"vulpz/train-api/src/api"
 	"vulpz/train-api/src/authentication"
 	"vulpz/train-api/src/authentication/cryptography"
@@ -30,6 +31,8 @@ func (environment *Environment) AdministrationLoginHandler(context *gin.Context)
 		api.SendErrorResponse(context, http.StatusBadRequest, "Malformed Request Body")
 		return
 	}
+
+	request.Email = strings.ToUpper(request.Email)
 
 	var administrator model.Administrator
 	administrator.Email = request.Email
@@ -90,6 +93,8 @@ func (environment *Environment) LoginHandler(context *gin.Context) {
 		return
 	}
 
+	request.Email = strings.ToUpper(request.Email)
+
 	var customer model.Customer
 	customer.Email = request.Email
 	var hash string
@@ -143,6 +148,8 @@ func (environment *Environment) RegisterHandler(context *gin.Context) {
 		api.SendErrorResponse(context, http.StatusBadRequest, "Malformed Request Body")
 		return
 	}
+
+	request.Email = strings.ToUpper(request.Email)
 
 	// Validate required fields
 	if request.Email == "" || request.Password == "" || request.Forename == "" || request.Surname == "" {

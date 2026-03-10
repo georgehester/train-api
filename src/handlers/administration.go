@@ -1,10 +1,13 @@
 package handlers
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"vulpz/train-api/src/api"
 	"vulpz/train-api/src/authentication"
+	"vulpz/train-api/src/authentication/cryptography"
 	"vulpz/train-api/src/model"
 
 	"github.com/gin-gonic/gin"
@@ -50,13 +53,13 @@ func (environment *Environment) GetCustomersHandler(context *gin.Context) {
 // @Description  Responds with a customer's details and their unapproved applications
 // @Tags         administration
 // @Produce      json
-// @Param        id   path      string  true  "Customer ID"
+// @Param        customerId   path      string  true  "Customer ID"
 // @Success      200  {object}  model.CustomerWithApplications
 // @Failure      404  {object}  model.ErrorResponse
 // @Failure      500  {object}  model.ErrorResponse
-// @Router       /administration/customer/{id} [get]
+// @Router       /administration/customer/{customerId} [get]
 func (environment *Environment) GetCustomerHandler(context *gin.Context) {
-	customerId := context.Param("id")
+	customerId := context.Param("customerId")
 
 	var customer model.CustomerWithApplications
 	customerError := environment.Database.QueryRow(context, "SELECT id, email, forename, surname FROM customers WHERE id = $1;", customerId).Scan(&customer.Id, &customer.Email, &customer.Forename, &customer.Surname)
@@ -97,13 +100,13 @@ func (environment *Environment) GetCustomerHandler(context *gin.Context) {
 // @Description  Responds with all applications for a given customer
 // @Tags         administration
 // @Produce      json
-// @Param        id   path      string  true  "Customer ID"
+// @Param        customerId   path      string  true  "Customer ID"
 // @Success      200  {array}   model.Application
 // @Failure      404  {object}  model.ErrorResponse
 // @Failure      500  {object}  model.ErrorResponse
-// @Router       /administration/customer/{id}/application [get]
+// @Router       /administration/customer/{customerId}/application [get]
 func (environment *Environment) GetCustomerApplicationsHandler(context *gin.Context) {
-	customerId := context.Param("id")
+	customerId := context.Param("customerId")
 
 	var exists bool
 	existsError := environment.Database.QueryRow(context, "SELECT EXISTS(SELECT 1 FROM customers WHERE id = $1);", customerId).Scan(&exists)
@@ -152,25 +155,80 @@ func (environment *Environment) GetCustomerApplicationsHandler(context *gin.Cont
 // @Failure      500  {object}  model.ErrorResponse
 // @Router       /administration/customer [post]
 func (environment *Environment) CreateCustomerHandler(context *gin.Context) {
+	var customerRequest model.CreateCustomerRequest
+
+	if bindError := context.ShouldBindJSON(&customerRequest); bindError != nil {
+		api.SendErrorResponse(context, http.StatusBadRequest, "Malformed Request Body")
+		return
+	}
+
+	if customerRequest.Email == "" || customerRequest.Forename == "" || customerRequest.Surname == "" {
+		api.SendErrorResponse(context, http.StatusBadRequest, "Malformed Request Body")
+		return
+	}
+
 	var customer model.Customer
-
-	if bindError := context.ShouldBindJSON(&customer); bindError != nil {
-		api.SendErrorResponse(context, http.StatusBadRequest, "Malformed Request Body")
-		return
-	}
-
-	if customer.Email == "" || customer.Forename == "" || customer.Surname == "" {
-		api.SendErrorResponse(context, http.StatusBadRequest, "Malformed Request Body")
-		return
-	}
-
 	customer.Id = uuid.New().String()
+	customer.Email = strings.ToUpper(customerRequest.Email)
+	customer.Forename = customerRequest.Forename
+	customer.Surname = customerRequest.Surname
 
-	insertError := environment.Database.QueryRow(context,
-		"INSERT INTO customers (id, email, forename, surname) VALUES ($1, $2, $3, $4) RETURNING id, email, forename, surname;",
-		customer.Id, customer.Email, customer.Forename, customer.Surname).Scan(&customer.Id, &customer.Email, &customer.Forename, &customer.Surname)
+	temporaryPassword, passwordError := authentication.GenerateRandomPassword(12)
+	if passwordError != nil {
+		api.SendErrorResponse(context, http.StatusInternalServerError, "Failed To Generate Temporary Password")
+		return
+	}
+
+	hash, hashError := cryptography.Hash(temporaryPassword)
+	if hashError != nil {
+		api.SendErrorResponse(context, http.StatusInternalServerError, "Failed To Hash Password")
+		return
+	}
+
+	insertError := environment.Database.QueryRow(
+		context,
+		"INSERT INTO customers (id, email, forename, surname, hash) VALUES ($1, $2, $3, $4, $5) RETURNING id, email, forename, surname;",
+		customer.Id,
+		customer.Email,
+		customer.Forename,
+		customer.Surname,
+		hash,
+	).Scan(&customer.Id, &customer.Email, &customer.Forename, &customer.Surname)
 	if insertError != nil {
 		api.SendErrorResponse(context, http.StatusInternalServerError, "Failed To Create Customer")
+		return
+	}
+
+	if environment.EmailClient == nil {
+		_, rollbackError := environment.Database.Exec(context, "DELETE FROM customers WHERE id = $1", customer.Id)
+		if rollbackError != nil {
+			api.SendErrorResponse(context, http.StatusInternalServerError, "Email Client Not Configured And Failed To Rollback Customer")
+			return
+		}
+
+		api.SendErrorResponse(context, http.StatusInternalServerError, "Email Client Not Configured")
+		return
+	}
+
+	emailBody := fmt.Sprintf(`
+	Hello %s %s,
+
+	Your temporary password is %s.
+	`,
+		customer.Forename,
+		customer.Surname,
+		temporaryPassword,
+	)
+
+	emailError := environment.EmailClient.Send([]string{customer.Email}, "Account Created", emailBody)
+	if emailError != nil {
+		_, rollbackError := environment.Database.Exec(context, "DELETE FROM customers WHERE id = $1", customer.Id)
+		if rollbackError != nil {
+			api.SendErrorResponse(context, http.StatusInternalServerError, "Failed To Send Temporary Password Email And Failed To Rollback Customer")
+			return
+		}
+
+		api.SendErrorResponse(context, http.StatusInternalServerError, "Failed To Send Temporary Password Email")
 		return
 	}
 
