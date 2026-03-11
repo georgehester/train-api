@@ -99,6 +99,10 @@ For my API I chose to use the Go programming language. This choice was made on t
 \newline
 To make development of my API in Go simpler I chose to employ an API framework. In my case I chose to use a common well documented framework called Gin. This choice meant there was plenty of documentation of how to use the framework and that a LLM would likely have a good amount of training data related to the framework to infer from.
 
+\noindent
+\newline
+For my database I chose to use PostgreSQL, this choice was made after trial testing with SQLite. SQLite started to show extreme slowdown during the generation of the dataset, mainly the \texttt{stops} table, this forced me to reconsider my choice of DBMS. Instead of operating as a single portable file which is programmatically controlled through a driver PostgreSQL provides a full fledged engine making it much more performant and able to handle large volumes of traffic. Along with this PostgreSQL allows for more fine grained control of data types such as the use of \texttt{VARCHAR}, reducing the overall storage usage of the database.
+
 \section{Authentication}
 
 Endpoints in my API are organised into three different levels of authorisation.

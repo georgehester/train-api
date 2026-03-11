@@ -247,7 +247,9 @@ __marimo__/
 train.db
 *.env
 /static/
-/data/
+/data/**
+!/data/planetiler.yaml
+!/data/configuration.json
 /secret/
 /report/**
 !/report/report.tex

@@ -1,0 +1,18 @@
+schema_name: "Great Britain Railways"
+attribution: "© OpenStreetMap contributors, Natural Earth"
+
+sources:
+  ne_outline:
+    type: shapefile
+    # Planetiler will automatically download and extract this
+    url: https://naciscdn.org/naturalearth/10m/cultural/ne_10m_admin_0_countries.zip
+
+layers:
+  - id: outline
+    features:
+      - source: ne_outline
+        geometry: polygon
+        min_zoom: 0
+        max_zoom: 14
+        include_when:
+          ISO_A2: "GB"

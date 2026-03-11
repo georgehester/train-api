@@ -207,9 +207,9 @@ func (environment *Environment) CreateCustomerHandler(context *gin.Context) {
 	}
 
 	emailBody := fmt.Sprintf(`
-	Hello %s %s,
+Hello %s %s,
 
-	Your temporary password is %s.
+Your temporary password is %s.
 	`,
 		customer.Forename,
 		customer.Surname,

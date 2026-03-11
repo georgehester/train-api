@@ -1,0 +1,19 @@
+{
+    "options": {
+        "paths": {
+            "root": "/data",
+            "mbtiles": ""
+        }
+    },
+    "data": {
+        "railway-low": {
+            "mbtiles": "railway-line-low.mbtiles"
+        },
+        "railway-high": {
+            "mbtiles": "railway-line-high.mbtiles"
+        },
+        "great-britain": {
+            "mbtiles": "great-britain.mbtiles"
+        }
+    }
+}

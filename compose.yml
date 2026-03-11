@@ -18,8 +18,8 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./data:/data
-    command: --file united-kingdom.mbtiles
+      - ./data:/data:ro
+    command: --config /data/configuration.json
   application:
     build:
       context: .
@@ -29,6 +29,7 @@ services:
     secrets:
       - key-private
       - key-public
+      - email
     ports:
       - "8000:8000"
     environment:

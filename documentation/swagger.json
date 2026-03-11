@@ -276,18 +276,18 @@
                 "tags": [
                     "Customer"
                 ],
-                "summary": "Get application",
+                "summary": "Get Application",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Customer ID",
+                        "description": "Customer Id",
                         "name": "customerId",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
-                        "description": "Application ID",
+                        "description": "Application Id",
                         "name": "applicationId",
                         "in": "path",
                         "required": true
@@ -298,6 +298,18 @@
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/Application"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     },
                     "403": {
@@ -325,18 +337,18 @@
                 "tags": [
                     "Customer"
                 ],
-                "summary": "Delete application",
+                "summary": "Delete Application",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Customer ID",
+                        "description": "Customer Id",
                         "name": "customerId",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
-                        "description": "Application ID",
+                        "description": "Application Id",
                         "name": "applicationId",
                         "in": "path",
                         "required": true
@@ -345,6 +357,18 @@
                 "responses": {
                     "204": {
                         "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
                     },
                     "403": {
                         "description": "Forbidden",
@@ -376,18 +400,18 @@
                 "tags": [
                     "Customer"
                 ],
-                "summary": "Refresh application key",
+                "summary": "Refresh Application Key",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Customer ID",
+                        "description": "Customer Id",
                         "name": "customerId",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
-                        "description": "Application ID",
+                        "description": "Application Id",
                         "name": "applicationId",
                         "in": "path",
                         "required": true
@@ -398,6 +422,18 @@
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/Application"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     },
                     "403": {
@@ -430,11 +466,11 @@
                 "tags": [
                     "Customer"
                 ],
-                "summary": "Get customer data",
+                "summary": "Get Customer",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Customer ID",
+                        "description": "Customer Id",
                         "name": "customerId",
                         "in": "path",
                         "required": true
@@ -445,6 +481,24 @@
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/CustomerWithApplications"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     },
                     "404": {
@@ -471,11 +525,11 @@
                 "tags": [
                     "Customer"
                 ],
-                "summary": "Get customer applications",
+                "summary": "List Customer Applications",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Customer ID",
+                        "description": "Customer Id",
                         "name": "customerId",
                         "in": "path",
                         "required": true
@@ -489,6 +543,18 @@
                             "items": {
                                 "$ref": "#/definitions/Application"
                             }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     },
                     "403": {
@@ -516,17 +582,17 @@
                 "tags": [
                     "Customer"
                 ],
-                "summary": "Create application",
+                "summary": "Create Application",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Customer ID",
+                        "description": "Customer Id",
                         "name": "customerId",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "description": "Application details",
+                        "description": "Create Application Request",
                         "name": "body",
                         "in": "body",
                         "required": true,
@@ -544,6 +610,12 @@
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/ErrorResponse"
                         }

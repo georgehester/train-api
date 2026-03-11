@@ -139,6 +139,8 @@ func CORSDocumentationMiddleware() gin.HandlerFunc {
 func DevelopmentCORSMiddleware() gin.HandlerFunc {
 	return func(context *gin.Context) {
 		context.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		context.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT")
+		context.Writer.Header().Set("Access-Control-Allow-Headers", "content-type,authorization")
 
 		if context.Request.Method == "OPTIONS" {
 			context.AbortWithStatus(204)
