@@ -69,15 +69,16 @@ func main() {
 		router.Use(CORSMiddleware())
 	}
 
-	// Provide documentation endpoints
-	documentationRouterGroup := router.Group("/")
-	documentationRouterGroup.StaticFile("/documentation", "/documentation/swagger.json")
+	// Provide documentation endpoint
+	router.GET("/documentation", handlers.DocumentationHandler)
 
 	// Provide unprotected endpoints
 	router.GET("/health", handlers.HealthHandler)
 	router.POST("/administration/login", environment.AdministrationLoginHandler)
 	router.POST("/login", environment.LoginHandler)
 	router.POST("/register", environment.RegisterHandler)
+	router.DELETE("/password", environment.ResetPasswordHandler)
+	router.PUT("/password", environment.UpdatePasswordHandler)
 
 	// Create a protected router group behind user authentication layer
 	protectedRouterGroup := router.Group("/")

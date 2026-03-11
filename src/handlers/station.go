@@ -12,12 +12,12 @@ import (
 	"github.com/patrickmn/go-cache"
 )
 
-// GetStations returns the list of all railway stations.
-// @Summary      Get all stations
+// @Summary      List Stations
 // @Description  Responds with a list of all stations in the database
-// @Tags         stations
+// @Tags         Stations
 // @Produce      json
-// @Success      200  {array}  Station
+// @Success      200  {array}  model.Station
+// @Failure      500 {object}  model.ErrorResponse
 // @Router       /stations [get]
 func (environment *Environment) GetStationsHandler(context *gin.Context) {
 	rows, databaseError := environment.Database.Query(context, "SELECT tiploc, nlc, name, crs, latitude, longitude FROM stations;")
@@ -44,12 +44,11 @@ func (environment *Environment) GetStationsHandler(context *gin.Context) {
 	context.JSON(http.StatusOK, stationList)
 }
 
-// GetStation returns a single railway station by ID.
-// @Summary      Get station
+// @Summary      Get Station
 // @Description  Responds with a single station in the database
-// @Tags         stations
+// @Tags         Stations
 // @Produce      json
-// @Param        stationId  path      string         true  "Station ID (TIPLOC)"
+// @Param        stationId  path      string         true  "Station Id (TIPLOC)"
 // @Success      200        {object}  model.Station
 // @Failure      404        {object}  model.ErrorResponse
 // @Failure      500        {object}  model.ErrorResponse
@@ -75,6 +74,13 @@ func (environment *Environment) GetStationHandler(context *gin.Context) {
 	context.JSON(http.StatusOK, station)
 }
 
+// @Summary      Get Station GeoJSON
+// @Description  Responds with a GeoJSON representing station locations as features
+// @Tags         Stations
+// @Produce      json
+// @Success      200        {object}  model.GeoJSON
+// @Failure      500        {object}  model.ErrorResponse
+// @Router       /stations.geojson [get]
 func (environment *Environment) GetStationsGeoJSONHandler(context *gin.Context) {
 	const cacheKey = "StationsGeoJSON"
 

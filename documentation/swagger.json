@@ -16,9 +16,9 @@
                     "application/json"
                 ],
                 "tags": [
-                    "administration"
+                    "Administration"
                 ],
-                "summary": "Get all customers",
+                "summary": "List Customers",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -46,12 +46,12 @@
                     "application/json"
                 ],
                 "tags": [
-                    "administration"
+                    "Administration"
                 ],
-                "summary": "Create a new customer",
+                "summary": "Create Customer",
                 "parameters": [
                     {
-                        "description": "Customer data",
+                        "description": "Create Customer Request",
                         "name": "customer",
                         "in": "body",
                         "required": true,
@@ -82,21 +82,21 @@
                 }
             }
         },
-        "/administration/customer/{id}": {
+        "/administration/customer/{customerId}": {
             "get": {
-                "description": "Responds with a customer's details and their unapproved applications",
+                "description": "Responds with a customer and their details",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "administration"
+                    "Administration"
                 ],
-                "summary": "Get customer with pending applications",
+                "summary": "Get Customer",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Customer ID",
-                        "name": "id",
+                        "description": "Customer Id",
+                        "name": "customerId",
                         "in": "path",
                         "required": true
                     }
@@ -123,21 +123,21 @@
                 }
             }
         },
-        "/administration/customer/{id}/application": {
+        "/administration/customer/{customerId}/application": {
             "get": {
                 "description": "Responds with all applications for a given customer",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "administration"
+                    "Administration"
                 ],
-                "summary": "Get customer applications",
+                "summary": "List Customer Applications",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Customer ID",
-                        "name": "id",
+                        "description": "Customer Id",
+                        "name": "customerId",
                         "in": "path",
                         "required": true
                     }
@@ -167,9 +167,57 @@
                 }
             }
         },
+        "/administration/customer/{customerId}/application/{applicationId}/approve": {
+            "post": {
+                "description": "Approves an application so an API key can be generated",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Administration"
+                ],
+                "summary": "Approve Customer Application",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Customer Id",
+                        "name": "customerId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Application Id",
+                        "name": "applicationId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/Application"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/administration/login": {
             "post": {
-                "description": "Returns a JWT (Json Web Token) which will expire in 24 hours.",
+                "description": "Returns a JWT (Json Web Token) which will expire in 24 hours",
                 "consumes": [
                     "application/json"
                 ],
@@ -199,13 +247,167 @@
                         }
                     },
                     "400": {
-                        "description": "Malformed Request Payload",
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/ErrorResponse"
                         }
                     },
                     "401": {
-                        "description": "Invalid Credentials",
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/customer/{customerId}/application/{applicationId}": {
+            "get": {
+                "description": "Fetches application details for the authenticated customer",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Customer"
+                ],
+                "summary": "Get application",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Customer ID",
+                        "name": "customerId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Application ID",
+                        "name": "applicationId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/Application"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Deletes an application for the authenticated customer",
+                "tags": [
+                    "Customer"
+                ],
+                "summary": "Delete application",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Customer ID",
+                        "name": "customerId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Application ID",
+                        "name": "applicationId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/customer/{customerId}/application/{applicationId}/key/refresh": {
+            "post": {
+                "description": "Refreshes the API key associated with an application",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Customer"
+                ],
+                "summary": "Refresh application key",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Customer ID",
+                        "name": "customerId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Application ID",
+                        "name": "applicationId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/Application"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/ErrorResponse"
                         }
@@ -233,7 +435,7 @@
                     {
                         "type": "string",
                         "description": "Customer ID",
-                        "name": "id",
+                        "name": "customerId",
                         "in": "path",
                         "required": true
                     }
@@ -260,9 +462,136 @@
                 }
             }
         },
+        "/customer/{id}/application": {
+            "get": {
+                "description": "Fetches all application details for the authenticated customer",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Customer"
+                ],
+                "summary": "Get customer applications",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Customer ID",
+                        "name": "customerId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Application"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Creates a new application for the authenticated customer",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Customer"
+                ],
+                "summary": "Create application",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Customer ID",
+                        "name": "customerId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Application details",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/CreateApplicationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/Application"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/documentation": {
+            "get": {
+                "description": "Returns the OpenAPI JSON documentation",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Documentation"
+                ],
+                "summary": "Get Documentation",
+                "responses": {
+                    "200": {
+                        "description": "Swagger OpenAPI JSON",
+                        "schema": {
+                            "type": "file"
+                        }
+                    }
+                }
+            }
+        },
         "/login": {
             "post": {
-                "description": "Returns a JWT (Json Web Token) which will expire in 24 hours.",
+                "description": "Returns a JWT (Json Web Token) which will expire in 24 hours",
                 "consumes": [
                     "application/json"
                 ],
@@ -292,13 +621,103 @@
                         }
                     },
                     "400": {
-                        "description": "Malformed Request Payload",
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/ErrorResponse"
                         }
                     },
                     "401": {
-                        "description": "Invalid Credentials",
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/password": {
+            "put": {
+                "description": "Updates existing password with new one after verifying the current password",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Update Password",
+                "parameters": [
+                    {
+                        "description": "Password Update Request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/PasswordUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Resets password given a user's email address",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Reset Password",
+                "parameters": [
+                    {
+                        "description": "Password Reset Request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/PasswordResetRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/ErrorResponse"
                         }
@@ -314,7 +733,7 @@
         },
         "/register": {
             "post": {
-                "description": "Returns a JWT (Json Web Token) which will expire in 24 hours.",
+                "description": "Returns a JWT (Json Web Token) which will expire in 24 hours",
                 "consumes": [
                     "application/json"
                 ],
@@ -327,7 +746,7 @@
                 "summary": "Register",
                 "parameters": [
                     {
-                        "description": "Login Request",
+                        "description": "Register Request",
                         "name": "body",
                         "in": "body",
                         "required": true,
@@ -364,6 +783,47 @@
                 }
             }
         },
+        "/station/{stationId}": {
+            "get": {
+                "description": "Responds with a single station in the database",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Stations"
+                ],
+                "summary": "Get Station",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Station Id (TIPLOC)",
+                        "name": "stationId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/Station"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/stations": {
             "get": {
                 "description": "Responds with a list of all stations in the database",
@@ -371,17 +831,49 @@
                     "application/json"
                 ],
                 "tags": [
-                    "stations"
+                    "Stations"
                 ],
-                "summary": "Get all stations",
+                "summary": "List Stations",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/handlers.Station"
+                                "$ref": "#/definitions/Station"
                             }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/stations.geojson": {
+            "get": {
+                "description": "Responds with a GeoJSON representing station locations as features",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Stations"
+                ],
+                "summary": "Get Station GeoJSON",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/GeoJSON"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     }
                 }
@@ -404,6 +896,17 @@
                 "key": {
                     "type": "string"
                 },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "CreateApplicationRequest": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
                 "name": {
                     "type": "string"
                 }
@@ -457,6 +960,20 @@
                 }
             }
         },
+        "GeoJSON": {
+            "type": "object",
+            "properties": {
+                "features": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/GeoJSON"
+                    }
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
         "LoginRequest": {
             "type": "object",
             "properties": {
@@ -472,6 +989,28 @@
             "type": "object",
             "properties": {
                 "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "PasswordResetRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                }
+            }
+        },
+        "PasswordUpdateRequest": {
+            "type": "object",
+            "properties": {
+                "currentPassword": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "newPassword": {
                     "type": "string"
                 }
             }
@@ -493,7 +1032,7 @@
                 }
             }
         },
-        "handlers.Station": {
+        "Station": {
             "type": "object",
             "properties": {
                 "crs": {

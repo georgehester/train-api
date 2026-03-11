@@ -15,10 +15,9 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-// GetAllCustomers returns the list of all customers.
-// @Summary      Get all customers
+// @Summary      List Customers
 // @Description  Responds with a list of all customers
-// @Tags         administration
+// @Tags         Administration
 // @Produce      json
 // @Success      200  {array}  model.Customer
 // @Failure      500  {object} model.ErrorResponse
@@ -48,12 +47,11 @@ func (environment *Environment) GetCustomersHandler(context *gin.Context) {
 	context.JSON(http.StatusOK, customerList)
 }
 
-// GetCustomer returns a specific customer with their unapproved applications.
-// @Summary      Get customer with pending applications
-// @Description  Responds with a customer's details and their unapproved applications
-// @Tags         administration
+// @Summary      Get Customer
+// @Description  Responds with a customer and their details
+// @Tags         Administration
 // @Produce      json
-// @Param        customerId   path      string  true  "Customer ID"
+// @Param        customerId   path      string  true  "Customer Id"
 // @Success      200  {object}  model.CustomerWithApplications
 // @Failure      404  {object}  model.ErrorResponse
 // @Failure      500  {object}  model.ErrorResponse
@@ -95,12 +93,11 @@ func (environment *Environment) GetCustomerHandler(context *gin.Context) {
 	context.JSON(http.StatusOK, customer)
 }
 
-// GetApplications returns all applications for a specific customer.
-// @Summary      Get customer applications
+// @Summary     List Customer Applications
 // @Description  Responds with all applications for a given customer
-// @Tags         administration
+// @Tags         Administration
 // @Produce      json
-// @Param        customerId   path      string  true  "Customer ID"
+// @Param        customerId   path      string  true  "Customer Id"
 // @Success      200  {array}   model.Application
 // @Failure      404  {object}  model.ErrorResponse
 // @Failure      500  {object}  model.ErrorResponse
@@ -143,13 +140,12 @@ func (environment *Environment) GetCustomerApplicationsHandler(context *gin.Cont
 	context.JSON(http.StatusOK, applicationList)
 }
 
-// CreateCustomer creates a new customer.
-// @Summary      Create a new customer
+// @Summary      Create Customer
 // @Description  Creates a new customer with the provided details
-// @Tags         administration
+// @Tags         Administration
 // @Accept       json
 // @Produce      json
-// @Param        customer  body      model.Customer  true  "Customer data"
+// @Param        customer  body      model.Customer  true "Create Customer Request"
 // @Success      201  {object}  model.Customer
 // @Failure      400  {object}  model.ErrorResponse
 // @Failure      500  {object}  model.ErrorResponse
@@ -235,16 +231,16 @@ func (environment *Environment) CreateCustomerHandler(context *gin.Context) {
 	context.JSON(http.StatusCreated, customer)
 }
 
-// ApproveApplication approves a specific application and issues a fresh API key.
-// @Summary      Approve application
+// @Summary      Approve Customer Application
 // @Description  Approves an application so an API key can be generated
-// @Tags         administration
+// @Tags         Administration
 // @Produce      json
-// @Param        id   path      string             true  "Application ID"
+// @Param        customerId   path      string             true  "Customer Id"
+// @Param        applicationId   path      string             true  "Application Id"
 // @Success      200  {object}  model.Application
 // @Failure      404  {object}  model.ErrorResponse
 // @Failure      500  {object}  model.ErrorResponse
-// @Router       /administration/application/{id}/approve [post]
+// @Router       /administration/customer/{customerId}/application/{applicationId}/approve [post]
 func (environment *Environment) ApproveApplicationHandler(context *gin.Context) {
 	customerId := context.Param("customerId")
 	applicationId := context.Param("applicationId")
