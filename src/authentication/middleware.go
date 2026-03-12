@@ -4,14 +4,38 @@ import (
 	"encoding/base64"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
+	"github.com/patrickmn/go-cache"
 	"vulpz/train-api/src/api"
 )
 
 const ClaimsKey string = "claims"
 const ApplicationIdKey string = "applicationId"
+
+func parseApplicationAuthorizationHeader(header string) (string, string, bool) {
+	headerSplit := strings.SplitN(header, " ", 2)
+	if len(headerSplit) != 2 || headerSplit[0] != "Bearer" {
+		return "", "", false
+	}
+
+	decodedBytes, decodeError := base64.StdEncoding.DecodeString(headerSplit[1])
+	if decodeError != nil {
+		decodedBytes, decodeError = base64.RawStdEncoding.DecodeString(headerSplit[1])
+		if decodeError != nil {
+			return "", "", false
+		}
+	}
+
+	credentials := strings.SplitN(string(decodedBytes), ":", 2)
+	if len(credentials) != 2 || credentials[0] == "" || credentials[1] == "" {
+		return "", "", false
+	}
+
+	return credentials[0], credentials[1], true
+}
 
 func (keyManager *KeyManager) Middleware() gin.HandlerFunc {
 	return func(context *gin.Context) {
@@ -74,32 +98,12 @@ func (keyManager *KeyManager) ApplicationKeyMiddleware(database *pgx.Conn) gin.H
 			return
 		}
 
-		headerSplit := strings.SplitN(header, " ", 2)
-		if len(headerSplit) != 2 || headerSplit[0] != "Bearer" {
+		applicationId, applicationKey, ok := parseApplicationAuthorizationHeader(header)
+		if !ok {
 			api.SendErrorResponse(context, http.StatusUnauthorized, "Authorization Header Invalid")
 			context.Abort()
 			return
 		}
-
-		decodedBytes, decodeError := base64.StdEncoding.DecodeString(headerSplit[1])
-		if decodeError != nil {
-			decodedBytes, decodeError = base64.RawStdEncoding.DecodeString(headerSplit[1])
-			if decodeError != nil {
-				api.SendErrorResponse(context, http.StatusUnauthorized, "Authorization Header Invalid")
-				context.Abort()
-				return
-			}
-		}
-
-		credentials := strings.SplitN(string(decodedBytes), ":", 2)
-		if len(credentials) != 2 || credentials[0] == "" || credentials[1] == "" {
-			api.SendErrorResponse(context, http.StatusUnauthorized, "Authorization Header Invalid")
-			context.Abort()
-			return
-		}
-
-		applicationId := credentials[0]
-		applicationKey := credentials[1]
 
 		var approved bool
 		queryError := database.QueryRow(
@@ -125,7 +129,60 @@ func (keyManager *KeyManager) ApplicationKeyMiddleware(database *pgx.Conn) gin.H
 		}
 
 		// Store application id in context for use in handlers
-		context.Set(applicationKey, applicationId)
+		context.Set(ApplicationIdKey, applicationId)
+		context.Next()
+	}
+}
+
+func (keyManager *KeyManager) ApplicationRateLimitMiddleware(requestsPerMinute int) gin.HandlerFunc {
+	if requestsPerMinute <= 0 {
+		requestsPerMinute = 60
+	}
+
+	requestCounts := cache.New(1*time.Minute, 2*time.Minute)
+
+	return func(context *gin.Context) {
+		applicationIdValue, exists := context.Get(ApplicationIdKey)
+		if !exists {
+			header := context.GetHeader("Authorization")
+			if header == "" {
+				api.SendErrorResponse(context, http.StatusUnauthorized, "Missing Authorization Header")
+				context.Abort()
+				return
+			}
+
+			applicationId, _, ok := parseApplicationAuthorizationHeader(header)
+			if !ok {
+				api.SendErrorResponse(context, http.StatusUnauthorized, "Authorization Header Invalid")
+				context.Abort()
+				return
+			}
+
+			applicationIdValue = applicationId
+		}
+
+		applicationId, ok := applicationIdValue.(string)
+		if !ok || applicationId == "" {
+			api.SendErrorResponse(context, http.StatusUnauthorized, "Application Credentials Invalid")
+			context.Abort()
+			return
+		}
+
+		if addError := requestCounts.Add(applicationId, 1, cache.DefaultExpiration); addError != nil {
+			count, incrementError := requestCounts.IncrementInt(applicationId, 1)
+			if incrementError != nil {
+				api.SendErrorResponse(context, http.StatusInternalServerError, "Failed To Apply Rate Limit")
+				context.Abort()
+				return
+			}
+
+			if count > requestsPerMinute {
+				api.SendErrorResponse(context, http.StatusTooManyRequests, "Rate Limit Exceeded")
+				context.Abort()
+				return
+			}
+		}
+
 		context.Next()
 	}
 }

@@ -126,6 +126,10 @@ Protected endpoints make use of the same JWT (JSON Web Token) authorisation. Onc
 
 //https://datatracker.ietf.org/doc/html/rfc6750
 
+\noindent
+\newline
+To sign JWTs (JSON Web Tokens) I have chosen to use a public private Ed25519 key pair and the EdDSA digital signature scheme. This choice was made as Ed25519 presents one of the most secure signature schemes currently adopted in wide use while still being performant for low tier hardware.
+
 \section{Generative AI Declaration}
 
 Generative AI was used to aid with the development of both the API application itself and the data manipulation scripts. The following Generative AI tools were used.

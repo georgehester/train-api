@@ -101,8 +101,10 @@ func main() {
 	administrationRouterGroup.POST("/customer/:customerId/application/:applicationId/approve", environment.ApproveApplicationHandler)
 
 	// Create a router group for product endpoints that require an API key
+	const productRequestsPerMinute = 120
 	productRouterGroup := router.Group("/")
 	productRouterGroup.Use(keyManager.ApplicationKeyMiddleware(database))
+	productRouterGroup.Use(keyManager.ApplicationRateLimitMiddleware(productRequestsPerMinute))
 	productRouterGroup.GET("/station", environment.GetStationsHandler)
 	productRouterGroup.GET("/station/:stationId", environment.GetStationHandler)
 	productRouterGroup.GET("/stations.geojson", environment.GetStationsGeoJSONHandler)

@@ -13,4 +13,4 @@ To generate the `stations` table in the database run the python script `python -
 
 ## Push Port
 
-To replay the updates from the National Rail Darwin Push Port data run the python script `python -m collection.push-port.replay`
+To replay the updates from the National Rail Darwin Push Port data run the python script `python -m collection.pushport.replay`
