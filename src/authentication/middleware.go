@@ -6,10 +6,12 @@ import (
 	"strings"
 	"time"
 
+	"vulpz/train-api/src/api"
+
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/patrickmn/go-cache"
-	"vulpz/train-api/src/api"
 )
 
 const ClaimsKey string = "claims"
@@ -88,7 +90,7 @@ func (keyManager *KeyManager) AdministrationMiddleware() gin.HandlerFunc {
 	}
 }
 
-func (keyManager *KeyManager) ApplicationKeyMiddleware(database *pgx.Conn) gin.HandlerFunc {
+func (keyManager *KeyManager) ApplicationKeyMiddleware(database *pgxpool.Pool) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		// Check for header presence
 		header := context.GetHeader("Authorization")

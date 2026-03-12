@@ -11,6 +11,7 @@ type Environment struct {
 	Port                     string
 	DatabaseConnectionString string
 	EmailAppPassword         string
+	OpenRouterAPIKey         string
 }
 
 type ApplicationEnvironment string
@@ -26,7 +27,16 @@ func LoadEnvironment() Environment {
 		Environment:              loadApplicationEnvironment(),
 		DatabaseConnectionString: loadDatabaseConnectionString(),
 		EmailAppPassword:         loadEmailAppPassword(),
+		OpenRouterAPIKey:         loadOpenRouterAPIKey(),
 	}
+}
+
+func loadOpenRouterAPIKey() string {
+	apiKey, loadError := secret.LoadSecret("open-router")
+	if loadError != nil {
+		return ""
+	}
+	return string(apiKey)
 }
 
 func loadPort() string {

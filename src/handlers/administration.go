@@ -19,7 +19,7 @@ import (
 // @Description  Responds with a list of all customers
 // @Tags         Administration
 // @Produce      json
-// @Success      200  {array}  model.Customer
+// @Success      200  {object}  []model.Customer
 // @Failure      500  {object} model.ErrorResponse
 // @Router       /administration/customer [get]
 func (environment *Environment) GetCustomersHandler(context *gin.Context) {
@@ -98,7 +98,7 @@ func (environment *Environment) GetCustomerHandler(context *gin.Context) {
 // @Tags         Administration
 // @Produce      json
 // @Param        customerId   path      string  true  "Customer Id"
-// @Success      200  {array}   model.Application
+// @Success      200  {object}   []model.Application
 // @Failure      404  {object}  model.ErrorResponse
 // @Failure      500  {object}  model.ErrorResponse
 // @Router       /administration/customer/{customerId}/application [get]

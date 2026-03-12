@@ -35,6 +35,19 @@ CREATE TABLE IF NOT EXISTS stops (
     FOREIGN KEY(station_tiploc) REFERENCES stations(tiploc)
 );
 
+CREATE TABLE IF NOT EXISTS stations_analysis (
+    tiploc VARCHAR(7) PRIMARY KEY,
+    service_count INTEGER NOT NULL,
+    delay_average_commute REAL NOT NULL,
+    delay_rank_commute INTEGER NOT NULL,
+    delay_average REAL NOT NULL,
+    delay_rank INTEGER NOT NULL,
+    FOREIGN KEY(tiploc) REFERENCES stations(tiploc)
+);
+
+-- CREATE INDEX IF NOT EXISTS idx_stops_station_tiploc_journey_id
+-- ON stops (station_tiploc, journey_id);
+
 CREATE TABLE IF NOT EXISTS administrators (
     id TEXT PRIMARY KEY,
     email TEXT NOT NULL,

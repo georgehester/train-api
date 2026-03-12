@@ -3,9 +3,8 @@
 \usepackage[english]{babel}
 \usepackage[colorlinks=true, allcolors=blue]{hyperref}
 \usepackage{minted}
-% \usepackage{natbib}
-% \bibliographystyle{abbrvnat}
-% \setcitestyle{authoryear,open={(},close={)}}
+\usepackage{natbib}
+\setcitestyle{authoryear,open={(},close={)}}
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{amsfonts}
@@ -105,30 +104,46 @@ For my database I chose to use PostgreSQL, this choice was made after trial test
 
 \section{Authentication}
 
-Endpoints in my API are organised into three different levels of authorisation.
+Endpoints in the API are organised into three different levels of authorisation.
 
 \begin{itemize}
-  \item Product - This group covers endpoints that relate to the actual core date API provided, authentication at these endpoints does not require login.
   \item Administration - Covers endpoints used by administrators to perform actions such as updating an application approval status.
-  \item Protected - Covers endpoints that the customer should manage, i.e. creating new applications, refreshing application keys.
+  \item Protected - Covers endpoints that the customer can use to manage their account and applications, i.e. creating new applications, refreshing application keys.
+  \item Product - This group covers endpoints that relate to the actual end user data API provided, authentication on these endpoints does not require login and instead makes use of a Bearer token scheme.
 \end{itemize}
 
 \noindent
-Product endpoints rely on the Bearer authorisation scheme, this means that an application key can be used by an autonomous user to make requests. This allows for the development of external applications which make use of our API.
+Product endpoints rely on the Bearer token authorisation scheme, this means that an application key can be used by an autonomous user to make requests. This allows for the development of external applications which make use of our API. The Authorization header provided when making requests should follow the format \texttt{Bearer <base64("<applicationId>:<applicationKey>")>} \citep{bearer}, an adaptation of OAuth 2.0 Bearer authorisation \citep{rfc6750}.
 
 \noindent
 \newline
-Administration endpoints make use of JWT (JSON Web Token) authorisation. A given administrator can login and retrieve a JSON Web Token. This token can then be used on subsequent requests to administration endpoints. In the JWT claims the \texttt{"type"} attribute is set to \texttt{administrator}, this allows us to check that the given requester should have access to the administrative endpoints.
+Administration endpoints make use of login endpoint which returns a JWT (JSON Web Token) \citep{rfc7519} which can be used for authorisation. The token is used on subsequent requests to the administration endpoints. Along with verifying the JWT the service also checks that the JWT claims \texttt{"type"} attribute is set to \texttt{administrator}, this allows the service to check that the given requester should have access to the administrative endpoints. The claims in the JWT are signed using the services private key so they can be verified as untampered.
 
 \noindent
 \newline
-Protected endpoints make use of the same JWT (JSON Web Token) authorisation. Once we have verified the validity of the token we can check that the customer requesting data has authorisation to access the customer data they are requesting. This is usually that the requested data is the customers own.
-
-//https://datatracker.ietf.org/doc/html/rfc6750
+Protected endpoints make use of the same JWT (JSON Web Token) authorisation scheme but do not check the \texttt{"type"} claim. These endpoints instead verify the validity of the token then check that the customer requesting data has authorisation to access the customer data they are requesting. This is usually that the requested data is the customers own, so the identifier in the claims matches the identifier in the URL.
 
 \noindent
 \newline
-To sign JWTs (JSON Web Tokens) I have chosen to use a public private Ed25519 key pair and the EdDSA digital signature scheme. This choice was made as Ed25519 presents one of the most secure signature schemes currently adopted in wide use while still being performant for low tier hardware.
+To sign JWTs (JSON Web Tokens) the service uses a public private Ed25519 key pair and the EdDSA digital signature scheme. This choice was made as Ed25519 presents one of the most secure signature schemes currently adopted in wide use while still being performant for low tier hardware.
+
+% \begin{verbatim}
+% ┌────────────────────────────────┐
+% │                                │
+% │         Administration         │
+% │                                │
+% └────────────────────────────────┘
+% ┌────────────────────────────────┐
+% │                                │
+% │           Protected            │
+% │                                │
+% └────────────────────────────────┘
+% ┌────────────────────────────────┐
+% │                                │
+% │            Product             │
+% │                                │
+% └────────────────────────────────┘
+% \end{verbatim}
 
 \section{Generative AI Declaration}
 
@@ -151,5 +166,10 @@ The primary model used through this tool was Claude Sonnet 4.6 due to its high L
 %   \caption{Timed PWM repeated every 20ms}
 %   \label{fig:pwm}
 % \end{figure}
+
+\newpage
+\bibliographystyle{plainnat}
+\nocite{rfc6750}
+\bibliography{references}
 
 \end{document}

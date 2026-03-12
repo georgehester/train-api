@@ -16,3 +16,12 @@ type StationServiceCount struct {
 	Longitude    float64 `json:"longitude"`
 	ServiceCount int     `json:"serviceCount"`
 } // @name StationServiceCount
+
+type StationAnalysis struct {
+	Tiploc                  string  `json:"tiploc"`
+	ServiceCount            int     `json:"serviceCount"`
+	AverageDelay            float64 `json:"averageDelay"`
+	AverageDelayRank        int     `json:"averageDelayRank"`
+	AverageDelayCommute     float64 `json:"averageDelayCommute"`
+	AverageDelayCommuteRank int     `json:"averageDelayCommuteRank"`
+} // @name StationAnalysis

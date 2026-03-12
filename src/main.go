@@ -10,7 +10,7 @@ import (
 	"vulpz/train-api/src/handlers"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/patrickmn/go-cache"
 )
 
@@ -24,18 +24,18 @@ func main() {
 	executionEnvironment := configuration.LoadEnvironment()
 
 	// Connect to database
-	var database *pgx.Conn
+	var database *pgxpool.Pool
 	var databaseError error
 	context := context.Background()
 
-	database, databaseError = pgx.Connect(
+	database, databaseError = pgxpool.New(
 		context,
 		executionEnvironment.DatabaseConnectionString,
 	)
 	if databaseError != nil {
 		log.Fatal(databaseError)
 	}
-	defer database.Close(context)
+	defer database.Close()
 
 	// Load public and private keys
 	keyManager, keyError := authentication.NewKeyManager()
@@ -53,10 +53,11 @@ func main() {
 	}
 
 	environment := &handlers.Environment{
-		Database:    database,
-		Cache:       cache.New(5*time.Minute, 10*time.Minute),
-		KeyManager:  keyManager,
-		EmailClient: &emailClient,
+		Database:         database,
+		Cache:            cache.New(5*time.Minute, 10*time.Minute),
+		KeyManager:       keyManager,
+		EmailClient:      &emailClient,
+		OpenRouterAPIKey: executionEnvironment.OpenRouterAPIKey,
 	}
 
 	router := gin.Default()
@@ -104,10 +105,12 @@ func main() {
 	const productRequestsPerMinute = 120
 	productRouterGroup := router.Group("/")
 	productRouterGroup.Use(keyManager.ApplicationKeyMiddleware(database))
-	productRouterGroup.Use(keyManager.ApplicationRateLimitMiddleware(productRequestsPerMinute))
+	// productRouterGroup.Use(keyManager.ApplicationRateLimitMiddleware(productRequestsPerMinute))
 	productRouterGroup.GET("/station", environment.GetStationsHandler)
 	productRouterGroup.GET("/station/:stationId", environment.GetStationHandler)
+	productRouterGroup.GET("/station/:stationId/analysis", environment.GetStationAnalysisHandler)
 	productRouterGroup.GET("/stations.geojson", environment.GetStationsGeoJSONHandler)
+	productRouterGroup.POST("/prompt", environment.PromptHandler)
 
 	router.Run(":" + executionEnvironment.Port)
 }

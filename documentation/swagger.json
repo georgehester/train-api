@@ -855,6 +855,43 @@
                 }
             }
         },
+        "/station": {
+            "get": {
+                "description": "Responds with all stations, or the first 5 matches when using the optional search query",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Stations"
+                ],
+                "summary": "List Stations",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search term matching station name or TIPLOC",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Station"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/station/{stationId}": {
             "get": {
                 "description": "Responds with a single station in the database",
@@ -896,24 +933,36 @@
                 }
             }
         },
-        "/stations": {
+        "/station/{stationId}/analysis": {
             "get": {
-                "description": "Responds with a list of all stations in the database",
+                "description": "Responds with station analysis data for the station matching the provided TIPLOC",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Stations"
                 ],
-                "summary": "List Stations",
+                "summary": "Get Station Analysis",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Station Id (TIPLOC)",
+                        "name": "stationId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/Station"
-                            }
+                            "$ref": "#/definitions/StationAnalysis"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     },
                     "500": {
@@ -1121,6 +1170,29 @@
                 },
                 "nlc": {
                     "type": "string"
+                },
+                "tiploc": {
+                    "type": "string"
+                }
+            }
+        },
+        "StationAnalysis": {
+            "type": "object",
+            "properties": {
+                "averageDelay": {
+                    "type": "number"
+                },
+                "averageDelayCommute": {
+                    "type": "number"
+                },
+                "averageDelayCommuteRank": {
+                    "type": "integer"
+                },
+                "averageDelayRank": {
+                    "type": "integer"
+                },
+                "serviceCount": {
+                    "type": "integer"
                 },
                 "tiploc": {
                     "type": "string"

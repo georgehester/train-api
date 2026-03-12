@@ -162,7 +162,7 @@ func (environment *Environment) CreateApplicationHandler(context *gin.Context) {
 // @Tags         Customer
 // @Produce      json
 // @Param        customerId   path      string               true  "Customer Id"
-// @Success      200  {array}   model.Application
+// @Success      200  {object}  []model.Application
 // @Failure      400  {object}  model.ErrorResponse
 // @Failure      401  {object}  model.ErrorResponse
 // @Failure      403  {object}  model.ErrorResponse

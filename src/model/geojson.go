@@ -17,6 +17,8 @@ type GeoJSONFeatureGeometry struct {
 } // @name GeoJSON Feature Geometry
 
 type GeoJSONFeatureProperties struct {
-	Id    string `json:"id"`
-	Value int    `json:"value"`
+	Id                  string  `json:"id"`
+	ServiceCount        int     `json:"service-count"`
+	AverageDelay        float64 `json:"average-delay"`
+	AverageDelayCommute float64 `json:"average-delay-commute"`
 } // @name GeoJSON Feature Properties

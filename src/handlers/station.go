@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strings"
 	"vulpz/train-api/src/api"
 	"vulpz/train-api/src/model"
 
@@ -13,14 +14,40 @@ import (
 )
 
 // @Summary      List Stations
-// @Description  Responds with a list of all stations in the database
+// @Description  Responds with all stations, or the first 5 matches when using the optional search query
 // @Tags         Stations
 // @Produce      json
-// @Success      200  {array}  model.Station
+// @Param        search  query     string         false  "Search term matching station name or TIPLOC"
+// @Success      200  {object}  []model.Station
 // @Failure      500 {object}  model.ErrorResponse
-// @Router       /stations [get]
+// @Router       /station [get]
 func (environment *Environment) GetStationsHandler(context *gin.Context) {
-	rows, databaseError := environment.Database.Query(context, "SELECT tiploc, nlc, name, crs, latitude, longitude FROM stations;")
+	search := strings.TrimSpace(context.Query("search"))
+
+	var rows pgx.Rows
+	var databaseError error
+
+	if search == "" {
+		rows, databaseError = environment.Database.Query(context, "SELECT tiploc, nlc, name, crs, latitude, longitude FROM stations;")
+	} else {
+		searchQuery := "%" + search + "%"
+		rows, databaseError = environment.Database.Query(
+			context,
+			`SELECT tiploc, nlc, name, crs, latitude, longitude
+			FROM stations
+			WHERE tiploc ILIKE $1 OR name ILIKE $1
+			ORDER BY
+				CASE
+					WHEN tiploc ILIKE $1 THEN 0
+					WHEN name ILIKE $1 THEN 1
+					ELSE 2
+				END,
+				name ASC
+			LIMIT 5;`,
+			searchQuery,
+		)
+	}
+
 	if databaseError != nil {
 		log.Fatal(databaseError)
 		api.SendErrorResponse(context, http.StatusInternalServerError, "Failed To Connect To Database")
@@ -28,7 +55,7 @@ func (environment *Environment) GetStationsHandler(context *gin.Context) {
 	}
 	defer rows.Close()
 
-	var stationList []model.Station
+	stationList := make([]model.Station, 0)
 
 	for rows.Next() {
 		var station model.Station
@@ -74,6 +101,43 @@ func (environment *Environment) GetStationHandler(context *gin.Context) {
 	context.JSON(http.StatusOK, station)
 }
 
+// @Summary      Get Station Analysis
+// @Description  Responds with station analysis data for the station matching the provided TIPLOC
+// @Tags         Stations
+// @Produce      json
+// @Param        stationId  path      string                true  "Station Id (TIPLOC)"
+// @Success      200        {object}  model.StationAnalysis
+// @Failure      404        {object}  model.ErrorResponse
+// @Failure      500        {object}  model.ErrorResponse
+// @Router       /station/{stationId}/analysis [get]
+func (environment *Environment) GetStationAnalysisHandler(context *gin.Context) {
+	stationId := context.Param("stationId")
+
+	var stationAnalysis model.StationAnalysis
+	queryError := environment.Database.QueryRow(
+		context,
+		"SELECT tiploc, service_count, delay_average, delay_rank, delay_average_commute, delay_rank_commute FROM stations_analysis WHERE tiploc = $1",
+		stationId,
+	).Scan(
+		&stationAnalysis.Tiploc,
+		&stationAnalysis.ServiceCount,
+		&stationAnalysis.AverageDelay,
+		&stationAnalysis.AverageDelayRank,
+		&stationAnalysis.AverageDelayCommute,
+		&stationAnalysis.AverageDelayCommuteRank,
+	)
+	if queryError != nil {
+		if queryError == pgx.ErrNoRows {
+			api.SendErrorResponse(context, http.StatusNotFound, "Station Analysis Not Found")
+		} else {
+			api.SendErrorResponse(context, http.StatusInternalServerError, "Failed To Connect To Database")
+		}
+		return
+	}
+
+	context.JSON(http.StatusOK, stationAnalysis)
+}
+
 // @Summary      Get Station GeoJSON
 // @Description  Responds with a GeoJSON representing station locations as features
 // @Tags         Stations
@@ -90,9 +154,15 @@ func (environment *Environment) GetStationsGeoJSONHandler(context *gin.Context) 
 	}
 
 	rows, databaseError := environment.Database.Query(context, `
-	SELECT stations.tiploc, stations.name, stations.latitude, stations.longitude, COUNT(stops.id) as count FROM stations
-	LEFT JOIN stops ON stops.station_tiploc = stations.tiploc
-	GROUP BY stations.tiploc;
+	SELECT
+		stations.tiploc,
+		stations.latitude,
+		stations.longitude,
+		COALESCE(stations_analysis.service_count, 0) AS service_count,
+		COALESCE(stations_analysis.delay_average, 0) AS delay_average,
+		COALESCE(stations_analysis.delay_average_commute, 0) AS delay_average_commute
+	FROM stations
+	LEFT JOIN stations_analysis ON stations_analysis.tiploc = stations.tiploc;
 	`)
 	if databaseError != nil {
 		log.Fatal(databaseError)
@@ -107,9 +177,14 @@ func (environment *Environment) GetStationsGeoJSONHandler(context *gin.Context) 
 	}
 
 	for rows.Next() {
-		var station model.StationServiceCount
+		var stationId string
+		var latitude float64
+		var longitude float64
+		var serviceCount int
+		var averageDelay float64
+		var averageDelayCommute float64
 
-		if scanError := rows.Scan(&station.Tiploc, &station.Name, &station.Latitude, &station.Longitude, &station.ServiceCount); scanError != nil {
+		if scanError := rows.Scan(&stationId, &latitude, &longitude, &serviceCount, &averageDelay, &averageDelayCommute); scanError != nil {
 			api.SendErrorResponse(context, http.StatusInternalServerError, "Failed To Parse Stations")
 			return
 		}
@@ -118,11 +193,13 @@ func (environment *Environment) GetStationsGeoJSONHandler(context *gin.Context) 
 			Type: "Feature",
 			Geometry: model.GeoJSONFeatureGeometry{
 				Type:        "Point",
-				Coordinates: []float64{station.Longitude, station.Latitude},
+				Coordinates: []float64{longitude, latitude},
 			},
 			Properties: model.GeoJSONFeatureProperties{
-				Id:    station.Tiploc,
-				Value: station.ServiceCount,
+				Id:                  stationId,
+				ServiceCount:        serviceCount,
+				AverageDelay:        averageDelay,
+				AverageDelayCommute: averageDelayCommute,
 			},
 		})
 	}
