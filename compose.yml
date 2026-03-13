@@ -74,6 +74,7 @@ services:
       - application
       - tile-server
     volumes:
+      - ./scalar.html:/usr/share/nginx/html/index.html:ro
       - ./nginx/api.train.conf:/etc/nginx/conf.d/api.train.conf:ro
       - ./nginx/mapping.api.train.conf:/etc/nginx/conf.d/mapping.api.train.conf:ro
       - ./nginx/documentation.api.train.conf:/etc/nginx/conf.d/documentation.api.train.conf:ro
