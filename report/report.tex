@@ -58,13 +58,13 @@ Updated - 10-03-2026
 
 \begin{itemize}
   \item \href{https://github.com/georgehester/train-api}{GitHub Repository}
-  \item \href{http://documentation.api.train.vulpz.com}{Documentation}
+  \item \href{https://documentation.api.train.vulpz.com}{Documentation}
   \item \href{https://docs.google.com/presentation/d/1i460dvt5QaJjt-JxWjruQaugBEQW9677Q9r5tmAWCv4/edit?usp=sharing}{Presentation}
 \end{itemize}
 
 \section{Documentation}
 
-Documentation is provided in a live interface rather than PDF format. The live interface can be found using the link above or \url{http://documentation.api.train.vulpz.com}. The different endpoints provided by the API are organised into categories in the navigation pane on the left. Each endpoint has schema definitions for its possible requests and responses. All the models representing request and response types are under the Models heading on the navigation panel and can be expanded to show their child components.
+Documentation is provided in a live interface rather than PDF format. The live interface can be found using the link above or \url{https://documentation.api.train.vulpz.com}. The different endpoints provided by the API are organised into categories in the navigation pane on the left. Each endpoint has schema definitions for its possible requests and responses. All the models representing request and response types are under the Models heading on the navigation panel and can be expanded to show their child components.
 
 \section{Data Collection / Manipulation}
 
@@ -128,6 +128,10 @@ To make development of the API in Go simpler an API framework was employed. In t
 \noindent
 \newline
 For the database a choice was made to use PostgreSQL, this choice was made after trial testing with SQLite. SQLite started to show extreme slowdown during the generation of the dataset, mainly the \texttt{stops} table, this forced the choice of technology to be reconsidered. Instead of operating as a single portable file which is programmatically controlled through a driver PostgreSQL provides a full fledged engine making it much more performant and able to handle large volumes of traffic. Along with this PostgreSQL allows for more fine grained control of data types such as the use of \texttt{VARCHAR}, reducing the overall storage usage of the database.
+
+\noindent
+\newline
+Docker was employed to containerise the application, this allows the application to be portable across different machines including deployment to a production environment. This allows the application to always operate as intended no matter the hosting environment.
 
 \section{Database Schema}
 

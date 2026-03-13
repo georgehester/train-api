@@ -7,6 +7,8 @@
   - [Generation Of OpenAPI Documentation](#generation-of-openapi-documentation)
   - [Generation Of MBTiles](#generation-of-mbtiles)
   - [Execution](#execution)
+  - [Deployment](#deployment)
+  - [Generation Of Database Data](#generation-of-database-data)
 
 # Contributing
 
@@ -30,6 +32,9 @@ To generate the OpenAPI JSON documentation file simply run the following command
 ```sh
 ./swagger.sh
 ```
+
+> [!NOTE]
+> You may need to install Swag first using `go install github.com/swaggo/swag/cmd/swag@latest`
 
 ## Generation Of MBTiles
 
@@ -89,7 +94,7 @@ Next we want to focus on the `great-britain.mbtiles` file. The information requi
 The application and its components are entirely hosted inside of Docker and are defined using the Docker Compose configuration file. To run the application use the following command.
 
 ```sh
-docker compose up -d
+docker compose up nginx tile-server application database -d
 ```
 
 To stop the applications you can run.
@@ -97,3 +102,35 @@ To stop the applications you can run.
 ```sh
 docker compose down
 ```
+
+## Deployment
+
+To deploy the application you will need to clone the repository. Once you have done this you can setup the default Nginx configuration using.
+
+```sh
+./http.sh
+```
+
+Now you can run the application in unsecure mode.
+
+```sh
+docker compose up nginx tile-server application database -d
+```
+
+To generate the SSL certificates you can run Certbot in Docker using.
+
+```sh
+docker compose run --rm certbot certonly --webroot --webroot-path /var/www/certbot -d api.train.vulpz.com -d mapping.api.train.vulpz.com -d documentation.api.train.vulpz.com --no-eff-email --email george@nightfoxdev.com --agree-tos
+```
+
+Now copy the HTTPS configuration and restart.
+
+```sh
+./https.sh
+docker compose down
+docker compose up nginx tile-server application database -d
+```
+
+## Generation Of Database Data
+
+To generate the station data for the database refer to the [Collection Guide](collection/README.md).
