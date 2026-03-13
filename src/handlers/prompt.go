@@ -31,6 +31,7 @@ var tablePattern = regexp.MustCompile(`(?i)\b(from|join)\s+([a-zA-Z0-9_\.\"]+)`)
 // @Success      200   {object}  model.PromptResponse
 // @Failure      400   {object}  model.ErrorResponse
 // @Failure      500   {object}  model.ErrorResponse
+// @Security     ApplicationKeyBearerAuthorisation
 // @Router       /prompt [post]
 func (environment *Environment) PromptHandler(context *gin.Context) {
 	var request model.PromptRequest

@@ -19,6 +19,18 @@ import (
 // @description     This is simple REST API for a UK train data.
 // @host            api.train.vulpz.com
 // @BasePath        /
+// @securityDefinitions.apikey ProtectedBearerAuthorisation
+// @in                         header
+// @name                       Authorization
+// @description                JWT (JSON Web Token) access token using Bearer scheme, for protected routes.
+// @securityDefinitions.apikey AdministrationBearerAuthorisation
+// @in                         header
+// @name                       Authorization
+// @description                JWT (JSON Web Token) access token using Bearer scheme, for administration routes. Requires the "type" claim to be "administrator".
+// @securityDefinitions.apikey ApplicationKeyBearerAuthorisation
+// @in                         header
+// @name                       Authorization
+// @description                Application key credentials in Bearer format where token is base64(applicationId:applicationKey).
 func main() {
 	// Load the environment
 	executionEnvironment := configuration.LoadEnvironment()

@@ -21,6 +21,7 @@ import (
 // @Produce      json
 // @Success      200  {object}  []model.Customer
 // @Failure      500  {object} model.ErrorResponse
+// @Security     AdministrationBearerAuthorisation
 // @Router       /administration/customer [get]
 func (environment *Environment) GetCustomersHandler(context *gin.Context) {
 	rows, databaseError := environment.Database.Query(context, "SELECT id, email, forename, surname FROM customers;")
@@ -55,6 +56,7 @@ func (environment *Environment) GetCustomersHandler(context *gin.Context) {
 // @Success      200  {object}  model.CustomerWithApplications
 // @Failure      404  {object}  model.ErrorResponse
 // @Failure      500  {object}  model.ErrorResponse
+// @Security     AdministrationBearerAuthorisation
 // @Router       /administration/customer/{customerId} [get]
 func (environment *Environment) GetCustomerHandler(context *gin.Context) {
 	customerId := context.Param("customerId")
@@ -101,6 +103,7 @@ func (environment *Environment) GetCustomerHandler(context *gin.Context) {
 // @Success      200  {object}   []model.Application
 // @Failure      404  {object}  model.ErrorResponse
 // @Failure      500  {object}  model.ErrorResponse
+// @Security     AdministrationBearerAuthorisation
 // @Router       /administration/customer/{customerId}/application [get]
 func (environment *Environment) GetCustomerApplicationsHandler(context *gin.Context) {
 	customerId := context.Param("customerId")
@@ -149,6 +152,7 @@ func (environment *Environment) GetCustomerApplicationsHandler(context *gin.Cont
 // @Success      201  {object}  model.Customer
 // @Failure      400  {object}  model.ErrorResponse
 // @Failure      500  {object}  model.ErrorResponse
+// @Security     AdministrationBearerAuthorisation
 // @Router       /administration/customer [post]
 func (environment *Environment) CreateCustomerHandler(context *gin.Context) {
 	var customerRequest model.CreateCustomerRequest
@@ -240,6 +244,7 @@ Your temporary password is %s.
 // @Success      200  {object}  model.Application
 // @Failure      404  {object}  model.ErrorResponse
 // @Failure      500  {object}  model.ErrorResponse
+// @Security     AdministrationBearerAuthorisation
 // @Router       /administration/customer/{customerId}/application/{applicationId}/approve [post]
 func (environment *Environment) ApproveApplicationHandler(context *gin.Context) {
 	customerId := context.Param("customerId")

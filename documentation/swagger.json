@@ -11,6 +11,11 @@
     "paths": {
         "/administration/customer": {
             "get": {
+                "security": [
+                    {
+                        "AdministrationBearerAuthorisation": []
+                    }
+                ],
                 "description": "Responds with a list of all customers",
                 "produces": [
                     "application/json"
@@ -38,6 +43,11 @@
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "AdministrationBearerAuthorisation": []
+                    }
+                ],
                 "description": "Creates a new customer with the provided details",
                 "consumes": [
                     "application/json"
@@ -84,6 +94,11 @@
         },
         "/administration/customer/{customerId}": {
             "get": {
+                "security": [
+                    {
+                        "AdministrationBearerAuthorisation": []
+                    }
+                ],
                 "description": "Responds with a customer and their details",
                 "produces": [
                     "application/json"
@@ -125,6 +140,11 @@
         },
         "/administration/customer/{customerId}/application": {
             "get": {
+                "security": [
+                    {
+                        "AdministrationBearerAuthorisation": []
+                    }
+                ],
                 "description": "Responds with all applications for a given customer",
                 "produces": [
                     "application/json"
@@ -169,6 +189,11 @@
         },
         "/administration/customer/{customerId}/application/{applicationId}/approve": {
             "post": {
+                "security": [
+                    {
+                        "AdministrationBearerAuthorisation": []
+                    }
+                ],
                 "description": "Approves an application so an API key can be generated",
                 "produces": [
                     "application/json"
@@ -269,6 +294,11 @@
         },
         "/customer/{customerId}/application/{applicationId}": {
             "get": {
+                "security": [
+                    {
+                        "ProtectedBearerAuthorisation": []
+                    }
+                ],
                 "description": "Fetches application details for the authenticated customer",
                 "produces": [
                     "application/json"
@@ -333,6 +363,11 @@
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "ProtectedBearerAuthorisation": []
+                    }
+                ],
                 "description": "Deletes an application for the authenticated customer",
                 "tags": [
                     "Customer"
@@ -393,6 +428,11 @@
         },
         "/customer/{customerId}/application/{applicationId}/key/refresh": {
             "post": {
+                "security": [
+                    {
+                        "ProtectedBearerAuthorisation": []
+                    }
+                ],
                 "description": "Refreshes the API key associated with an application",
                 "produces": [
                     "application/json"
@@ -459,6 +499,11 @@
         },
         "/customer/{id}": {
             "get": {
+                "security": [
+                    {
+                        "ProtectedBearerAuthorisation": []
+                    }
+                ],
                 "description": "Returns all customer data including applications",
                 "produces": [
                     "application/json"
@@ -518,6 +563,11 @@
         },
         "/customer/{id}/application": {
             "get": {
+                "security": [
+                    {
+                        "ProtectedBearerAuthorisation": []
+                    }
+                ],
                 "description": "Fetches all application details for the authenticated customer",
                 "produces": [
                     "application/json"
@@ -572,6 +622,11 @@
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "ProtectedBearerAuthorisation": []
+                    }
+                ],
                 "description": "Creates a new application for the authenticated customer",
                 "consumes": [
                     "application/json"
@@ -822,6 +877,11 @@
         },
         "/prompt": {
             "post": {
+                "security": [
+                    {
+                        "ApplicationKeyBearerAuthorisation": []
+                    }
+                ],
                 "description": "Generates a read-only SQL query from a natural language prompt, executes it, then returns a summary",
                 "consumes": [
                     "application/json"
@@ -920,6 +980,11 @@
         },
         "/station": {
             "get": {
+                "security": [
+                    {
+                        "ApplicationKeyBearerAuthorisation": []
+                    }
+                ],
                 "description": "Responds with all stations, or the first 5 matches when using the optional search query",
                 "produces": [
                     "application/json"
@@ -975,6 +1040,11 @@
         },
         "/station/{stationId}": {
             "get": {
+                "security": [
+                    {
+                        "ApplicationKeyBearerAuthorisation": []
+                    }
+                ],
                 "description": "Responds with a single station in the database",
                 "produces": [
                     "application/json"
@@ -1034,6 +1104,11 @@
         },
         "/station/{stationId}/analysis": {
             "get": {
+                "security": [
+                    {
+                        "ApplicationKeyBearerAuthorisation": []
+                    }
+                ],
                 "description": "Responds with station analysis data for the station matching the provided TIPLOC",
                 "produces": [
                     "application/json"
@@ -1093,6 +1168,11 @@
         },
         "/stations.geojson": {
             "get": {
+                "security": [
+                    {
+                        "ApplicationKeyBearerAuthorisation": []
+                    }
+                ],
                 "description": "Responds with a GeoJSON representing station locations as features",
                 "produces": [
                     "application/json"
@@ -1376,6 +1456,26 @@
                     "type": "string"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "AdministrationBearerAuthorisation": {
+            "description": "JWT (JSON Web Token) access token using Bearer scheme, for administration routes. Requires the \"type\" claim to be \"administrator\".",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        },
+        "ApplicationKeyBearerAuthorisation": {
+            "description": "Application key credentials in Bearer format where token is base64(applicationId:applicationKey).",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        },
+        "ProtectedBearerAuthorisation": {
+            "description": "JWT (JSON Web Token) access token using Bearer scheme, for protected routes.",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }

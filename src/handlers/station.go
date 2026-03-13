@@ -23,6 +23,7 @@ import (
 // @Failure      403 {object}  model.ErrorResponse
 // @Failure      429 {object}  model.ErrorResponse
 // @Failure      500 {object}  model.ErrorResponse
+// @Security     ApplicationKeyBearerAuthorisation
 // @Router       /station [get]
 func (environment *Environment) GetStationsHandler(context *gin.Context) {
 	search := strings.TrimSpace(context.Query("search"))
@@ -85,6 +86,7 @@ func (environment *Environment) GetStationsHandler(context *gin.Context) {
 // @Failure      404        {object}  model.ErrorResponse
 // @Failure      429 {object}  model.ErrorResponse
 // @Failure      500        {object}  model.ErrorResponse
+// @Security     ApplicationKeyBearerAuthorisation
 // @Router       /station/{stationId} [get]
 func (environment *Environment) GetStationHandler(context *gin.Context) {
 	stationId := context.Param("stationId")
@@ -118,6 +120,7 @@ func (environment *Environment) GetStationHandler(context *gin.Context) {
 // @Failure      404        {object}  model.ErrorResponse
 // @Failure      429 {object}  model.ErrorResponse
 // @Failure      500        {object}  model.ErrorResponse
+// @Security     ApplicationKeyBearerAuthorisation
 // @Router       /station/{stationId}/analysis [get]
 func (environment *Environment) GetStationAnalysisHandler(context *gin.Context) {
 	stationId := context.Param("stationId")
@@ -156,6 +159,7 @@ func (environment *Environment) GetStationAnalysisHandler(context *gin.Context) 
 // @Failure      403 {object}  model.ErrorResponse
 // @Failure      429 {object}  model.ErrorResponse
 // @Failure      500        {object}  model.ErrorResponse
+// @Security     ApplicationKeyBearerAuthorisation
 // @Router       /stations.geojson [get]
 func (environment *Environment) GetStationsGeoJSONHandler(context *gin.Context) {
 	const cacheKey = "StationsGeoJSON"

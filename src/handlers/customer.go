@@ -22,6 +22,7 @@ import (
 // @Failure      403  {object}  model.ErrorResponse
 // @Failure      404  {object}  model.ErrorResponse
 // @Failure      500  {object}  model.ErrorResponse
+// @Security     ProtectedBearerAuthorisation
 // @Router       /customer/{id} [get]
 func (environment *Environment) GetCustomerByIdHandler(context *gin.Context) {
 	customerId := context.Param("customerId")
@@ -99,6 +100,7 @@ func (environment *Environment) GetCustomerByIdHandler(context *gin.Context) {
 // @Failure      403   {object}  model.ErrorResponse
 // @Failure      404   {object}  model.ErrorResponse
 // @Failure      500   {object}  model.ErrorResponse
+// @Security     ProtectedBearerAuthorisation
 // @Router       /customer/{id}/application [post]
 func (environment *Environment) CreateApplicationHandler(context *gin.Context) {
 	customerId := context.Param("customerId")
@@ -167,6 +169,7 @@ func (environment *Environment) CreateApplicationHandler(context *gin.Context) {
 // @Failure      401  {object}  model.ErrorResponse
 // @Failure      403  {object}  model.ErrorResponse
 // @Failure      500  {object}  model.ErrorResponse
+// @Security     ProtectedBearerAuthorisation
 // @Router       /customer/{id}/application [get]
 func (environment *Environment) GetApplicationsHandler(context *gin.Context) {
 	customerId := context.Param("customerId")
@@ -225,6 +228,7 @@ func (environment *Environment) GetApplicationsHandler(context *gin.Context) {
 // @Failure      403  {object}  model.ErrorResponse
 // @Failure      404    {object}  model.ErrorResponse
 // @Failure      500    {object}  model.ErrorResponse
+// @Security     ProtectedBearerAuthorisation
 // @Router       /customer/{customerId}/application/{applicationId} [get]
 func (environment *Environment) GetApplicationHandler(context *gin.Context) {
 	customerId := context.Param("customerId")
@@ -275,6 +279,7 @@ func (environment *Environment) GetApplicationHandler(context *gin.Context) {
 // @Failure      403   {object}  model.ErrorResponse
 // @Failure      404   {object}  model.ErrorResponse
 // @Failure      500   {object}  model.ErrorResponse
+// @Security     ProtectedBearerAuthorisation
 // @Router       /customer/{customerId}/application/{applicationId} [delete]
 func (environment *Environment) DeleteApplicationHandler(context *gin.Context) {
 	customerId := context.Param("customerId")
@@ -322,6 +327,7 @@ func (environment *Environment) DeleteApplicationHandler(context *gin.Context) {
 // @Failure      403   {object}  model.ErrorResponse
 // @Failure      404   {object}  model.ErrorResponse
 // @Failure      500   {object}  model.ErrorResponse
+// @Security     ProtectedBearerAuthorisation
 // @Router       /customer/{customerId}/application/{applicationId}/key/refresh [post]
 func (environment *Environment) RefreshApplicationKeyHandler(context *gin.Context) {
 	customerId := context.Param("customerId")
