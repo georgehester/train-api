@@ -661,6 +661,23 @@
                 }
             }
         },
+        "/health": {
+            "get": {
+                "description": "Check if the service is active",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Miscellaneous"
+                ],
+                "summary": "Health",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
         "/login": {
             "post": {
                 "description": "Returns a JWT (Json Web Token) which will expire in 24 hours",
@@ -787,6 +804,52 @@
                 "responses": {
                     "204": {
                         "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/prompt": {
+            "post": {
+                "description": "Generates a read-only SQL query from a natural language prompt, executes it, then returns a summary",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Stations"
+                ],
+                "summary": "Prompt SQL Assistant",
+                "parameters": [
+                    {
+                        "description": "Prompt Request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/PromptRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/PromptResponse"
+                        }
                     },
                     "400": {
                         "description": "Bad Request",
@@ -999,6 +1062,23 @@
                     }
                 }
             }
+        },
+        "/teapot": {
+            "get": {
+                "description": "I'm a teapot",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Miscellaneous"
+                ],
+                "summary": "Teapot",
+                "responses": {
+                    "418": {
+                        "description": "I'm a teapot"
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -1132,6 +1212,32 @@
                     "type": "string"
                 },
                 "newPassword": {
+                    "type": "string"
+                }
+            }
+        },
+        "PromptRequest": {
+            "type": "object",
+            "properties": {
+                "prompt": {
+                    "type": "string"
+                }
+            }
+        },
+        "PromptResponse": {
+            "type": "object",
+            "properties": {
+                "rows": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": true
+                    }
+                },
+                "sql": {
+                    "type": "string"
+                },
+                "summary": {
                     "type": "string"
                 }
             }

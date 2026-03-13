@@ -75,6 +75,7 @@ func main() {
 
 	// Provide unprotected endpoints
 	router.GET("/health", handlers.HealthHandler)
+	router.GET("/teapot", handlers.TeapotHandler)
 	router.POST("/administration/login", environment.AdministrationLoginHandler)
 	router.POST("/login", environment.LoginHandler)
 	router.POST("/register", environment.RegisterHandler)

@@ -54,14 +54,17 @@ Updated - 10-03-2026
 \tableofcontents
 
 \newpage
-\section{Aside}
+\section{Resource Links}
 
-"A computer can never be held accountable, therefore a computer must never make a management decision." - IBM
+\begin{itemize}
+  \item \href{https://github.com/georgehester/train-api}{GitHub Repository}
+  \item \href{https://documentation.api.vulpz.com}{Documentation}
+  \item \href{https://docs.google.com/presentation/d/1i460dvt5QaJjt-JxWjruQaugBEQW9677Q9r5tmAWCv4/edit?usp=sharing}{Presentation}
+\end{itemize}
 
-\newpage
 \section{Data Collection / Manipulation}
 
-Generative AI struggles with understanding and parsing data from the Rail Data Marketplace. This is likely because the data is provided by real systems that have complicated documentation that is not included in the models training set giving it no reference points of how to understand the formats presented. The AI is dumb.
+Due to my choice of data set I found that AI would struggle with understanding and parsing it. This is likely because the data is provided by real systems that have complicated documentation that is not included in the models training set giving it no reference points of how to understand the formats presented. The AI is dumb.
 
 \noindent
 \newline
@@ -160,6 +163,10 @@ The T3 Chat tool allows usage of a wide range of LLM models in a chat interface 
 \newline
 The primary model used through this tool was Claude Sonnet 4.6 due to its high LiveBench (\href{https://livebench.ai}{livebench.ai}) score and balanced token cost.
 
+\noindent
+\newline
+"A computer can never be held accountable, therefore a computer must never make a management decision." - \citep{ibm}
+
 % \begin{figure}[htbp]
 %   \centering
 %   \includegraphics[width=0.6\linewidth]{pwm.png}
@@ -171,5 +178,12 @@ The primary model used through this tool was Claude Sonnet 4.6 due to its high L
 \bibliographystyle{plainnat}
 \nocite{rfc6750}
 \bibliography{references}
+
+\section{Generative AI Examples}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.6\linewidth]{ai-01.png}
+\end{figure}
 
 \end{document}
