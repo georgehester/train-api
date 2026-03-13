@@ -19,6 +19,9 @@ import (
 // @Produce      json
 // @Param        search  query     string         false  "Search term matching station name or TIPLOC"
 // @Success      200  {object}  []model.Station
+// @Failure      401 {object}  model.ErrorResponse
+// @Failure      403 {object}  model.ErrorResponse
+// @Failure      429 {object}  model.ErrorResponse
 // @Failure      500 {object}  model.ErrorResponse
 // @Router       /station [get]
 func (environment *Environment) GetStationsHandler(context *gin.Context) {
@@ -77,7 +80,10 @@ func (environment *Environment) GetStationsHandler(context *gin.Context) {
 // @Produce      json
 // @Param        stationId  path      string         true  "Station Id (TIPLOC)"
 // @Success      200        {object}  model.Station
+// @Failure      401 {object}  model.ErrorResponse
+// @Failure      403 {object}  model.ErrorResponse
 // @Failure      404        {object}  model.ErrorResponse
+// @Failure      429 {object}  model.ErrorResponse
 // @Failure      500        {object}  model.ErrorResponse
 // @Router       /station/{stationId} [get]
 func (environment *Environment) GetStationHandler(context *gin.Context) {
@@ -107,7 +113,10 @@ func (environment *Environment) GetStationHandler(context *gin.Context) {
 // @Produce      json
 // @Param        stationId  path      string                true  "Station Id (TIPLOC)"
 // @Success      200        {object}  model.StationAnalysis
+// @Failure      401 {object}  model.ErrorResponse
+// @Failure      403 {object}  model.ErrorResponse
 // @Failure      404        {object}  model.ErrorResponse
+// @Failure      429 {object}  model.ErrorResponse
 // @Failure      500        {object}  model.ErrorResponse
 // @Router       /station/{stationId}/analysis [get]
 func (environment *Environment) GetStationAnalysisHandler(context *gin.Context) {
@@ -143,6 +152,9 @@ func (environment *Environment) GetStationAnalysisHandler(context *gin.Context) 
 // @Tags         Stations
 // @Produce      json
 // @Success      200        {object}  model.GeoJSON
+// @Failure      401 {object}  model.ErrorResponse
+// @Failure      403 {object}  model.ErrorResponse
+// @Failure      429 {object}  model.ErrorResponse
 // @Failure      500        {object}  model.ErrorResponse
 // @Router       /stations.geojson [get]
 func (environment *Environment) GetStationsGeoJSONHandler(context *gin.Context) {
